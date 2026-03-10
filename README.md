@@ -131,21 +131,30 @@ W systemie zostaną zastosowane podstawowe mechanizmy bezpieczeństwa:
 
 ## 8. Architektura systemu
 
-Client (React Frontend)
-        │
-        │ HTTP / WebSocket
-        ▼
-Backend API (ASP.NET Core)
-        │
-        ├── Authentication & User Management
-        ├── Matchmaking (wyszukiwanie korepetytorów)
-        ├── Booking System (rezerwacje zajęć)
-        │
-        ▼
-Realtime Communication Layer (SignalR)
-        │
-        ├── Chat
-        └── Whiteboard
-        │
-        ▼
-PostgreSQL Database
+```mermaid
+flowchart TD
+
+A[Client (React Frontend)]
+B[Backend API (ASP.NET Core)]
+C[Authentication & User Management]
+D[Matchmaking<br/>(wyszukiwanie korepetytorów)]
+E[Booking System<br/>(rezerwacje zajęć)]
+F[Realtime Communication Layer (SignalR)]
+G[Chat]
+H[Whiteboard]
+I[(PostgreSQL Database)]
+
+A -- HTTP / WebSocket --> B
+
+B --> C
+B --> D
+B --> E
+
+B --> F
+
+F --> G
+F --> H
+
+F --> I
+```
+
