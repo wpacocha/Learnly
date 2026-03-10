@@ -133,28 +133,28 @@ W systemie zostaną zastosowane podstawowe mechanizmy bezpieczeństwa:
 
 ```mermaid
 flowchart TD
+    A[Client (React Frontend)]
+    B[Backend API (ASP.NET Core)]
+    C[Authentication & User Management]
+    D[Matchmaking (wyszukiwanie korepetytorów)]
+    E[Booking System (rezerwacje zajęć)]
+    F[Realtime Communication Layer (SignalR)]
+    G[Chat]
+    H[Whiteboard]
+    I[(PostgreSQL Database)]
 
-A[Client (React Frontend)]
-B[Backend API (ASP.NET Core)]
-C[Authentication & User Management]
-D[Matchmaking<br/>(wyszukiwanie korepetytorów)]
-E[Booking System<br/>(rezerwacje zajęć)]
-F[Realtime Communication Layer (SignalR)]
-G[Chat]
-H[Whiteboard]
-I[(PostgreSQL Database)]
+    A -- HTTP / WebSocket --> B
 
-A -- HTTP / WebSocket --> B
+    B --> C
+    B --> D
+    B --> E
 
-B --> C
-B --> D
-B --> E
+    B --> F
 
-B --> F
+    F --> G
+    F --> H
 
-F --> G
-F --> H
-
-F --> I
+    F --> I
 ```
+
 
