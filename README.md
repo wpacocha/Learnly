@@ -138,14 +138,21 @@ W systemie zostaną zastosowane podstawowe mechanizmy bezpieczeństwa:
 
 ## 8. Architektura systemu
 
-React (Frontend)
+Client (React Frontend)
         │
         │ HTTP / WebSocket
         ▼
-ASP.NET Core API
+Backend API (ASP.NET Core)
         │
+        ├── Authentication & User Management
+        ├── Matchmaking (wyszukiwanie korepetytorów)
+        ├── Booking System (rezerwacje zajęć)
         │
-SignalR (Realtime)
+        ▼
+Realtime Communication Layer (SignalR)
+        │
+        ├── Chat
+        └── Whiteboard
         │
         ▼
 PostgreSQL Database
