@@ -23,23 +23,16 @@ Po wyszukaniu korepetytora klient może zarezerwować wybrany termin zajęć. W 
 
 ## 2. Schemat logiczny działania systemu
 
-Ogólny schemat działania systemu można przedstawić w następujący sposób:
-Rejestracja użytkownika
-        ↓
-Logowanie do systemu
-        ↓
-Utworzenie profilu korepetytora / wyszukiwanie korepetytora
-        ↓
-Podanie kryteriów wyszukiwania
-(przedmiot, poziom, lokalizacja, termin)
-        ↓
-Matchmaking – dopasowanie korepetytorów
-        ↓
-Lista dostępnych korepetytorów
-        ↓
-Rezerwacja zajęć
-        ↓
-Lekcja online (chat + whiteboard)
+```mermaid
+flowchart TD
+A[Rejestracja użytkownika] --> B[Logowanie do systemu]
+B --> C[Utworzenie profilu korepetytora / wyszukiwanie korepetytora]
+C --> D[Podanie kryteriów wyszukiwania<br/>przedmiot, poziom, lokalizacja, termin]
+D --> E[Matchmaking – dopasowanie korepetytorów]
+E --> F[Lista dostępnych korepetytorów]
+F --> G[Rezerwacja zajęć]
+G --> H[Lekcja online<br/>chat + whiteboard]
+```
 
 ---
 
