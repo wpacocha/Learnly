@@ -130,31 +130,30 @@ W systemie zostaną zastosowane podstawowe mechanizmy bezpieczeństwa:
 ---
 
 ## 8. Architektura systemu
-
 ```mermaid
 flowchart TD
-    A[Client (React Frontend)]
-    B[Backend API (ASP.NET Core)]
-    C[Authentication & User Management]
-    D[Matchmaking (wyszukiwanie korepetytorów)]
-    E[Booking System (rezerwacje zajęć)]
-    F[Realtime Communication Layer (SignalR)]
-    G[Chat]
-    H[Whiteboard]
-    I[(PostgreSQL Database)]
 
-    A -- HTTP / WebSocket --> B
+A[React Frontend (Client)]
+B[Backend API (ASP.NET Core)]
+C[Authentication & User Management]
+D[Matchmaking<br/>(wyszukiwanie korepetytorów)]
+E[Booking System<br/>(rezerwacje zajęć)]
+F[Realtime Communication Layer<br/>(SignalR)]
+G[Chat]
+H[Whiteboard]
+I[(PostgreSQL Database)]
 
-    B --> C
-    B --> D
-    B --> E
+A -->|HTTP / WebSocket| B
 
-    B --> F
+B --> C
+B --> D
+B --> E
+B --> F
 
-    F --> G
-    F --> H
+F --> G
+F --> H
 
-    F --> I
+B --> I
 ```
 
 
