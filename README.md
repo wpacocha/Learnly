@@ -2,7 +2,7 @@
 
 ## 1. Opis działania systemu
 
-Learnly jest aplikacją webową umożliwiającą kojarzenie klientów z korepetytorami oraz organizację korepetycji w środowisku online. System działa w architekturze klient–serwer i jest dostępny z poziomu przeglądarki internetowej.
+Learnly jest aplikacją webową umożliwiającą łączenie klientów z korepetytorami oraz organizację korepetycji w środowisku online. System działa w architekturze klient–serwer i jest dostępny z poziomu przeglądarki internetowej.
 
 Platforma obsługuje dwa typy użytkowników:
 
