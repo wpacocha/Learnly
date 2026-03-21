@@ -1,0 +1,178 @@
+-- ============================================================
+--  Learnly – PostgreSQL Database Schema
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- ROLES
+-- ------------------------------------------------------------
+CREATE TABLE Roles (
+    role_id   SERIAL PRIMARY KEY,
+    role_name VARCHAR(20) NOT NULL
+                CHECK (role_name IN ('admin', 'student', 'tutor'))
+);
+
+-- ------------------------------------------------------------
+-- USERS
+-- ------------------------------------------------------------
+CREATE TABLE Users (
+    user_id   SERIAL PRIMARY KEY,
+    role_id   INT          NOT NULL REFERENCES Roles(role_id),
+    email     VARCHAR(255) NOT NULL
+                CHECK (email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+    name      VARCHAR(100) NOT NULL,
+    surname   VARCHAR(100) NOT NULL,
+    password  VARCHAR(255) NOT NULL,   -- stored as bcrypt / argon2 hash
+    UNIQUE (email)
+);
+
+-- ------------------------------------------------------------
+-- SUBJECTS
+-- ------------------------------------------------------------
+CREATE TABLE Subjects (
+    subject_id SERIAL PRIMARY KEY,
+    name       VARCHAR(100) NOT NULL
+);
+
+-- ------------------------------------------------------------
+-- LEVELS
+-- ------------------------------------------------------------
+CREATE TABLE Levels (
+    level_id SERIAL PRIMARY KEY,
+    name     VARCHAR(50) NOT NULL
+                CHECK (name IN (
+                    'Primary School (1-3)',
+                    'Primary School (4-6)',
+                    'Primary School (7-8)',
+                    'High School',
+                    'matura exam',
+                    'Bachelor Degree',
+                    'A1', 'A2',
+                    'B1', 'B2',
+                    'C1', 'C2'
+                ))
+);
+
+-- ------------------------------------------------------------
+-- TUTOR OFFERS
+-- ------------------------------------------------------------
+CREATE TABLE TutorOffers (
+    tutorOffers_id SERIAL PRIMARY KEY,
+    tutor_id       INT            NOT NULL REFERENCES Users(user_id),
+    subject_id     INT            NOT NULL REFERENCES Subjects(subject_id),
+    level_id       INT            NOT NULL REFERENCES Levels(level_id),
+    lesson_type    VARCHAR(10)    NOT NULL
+                     CHECK (lesson_type IN ('online', 'in_person', 'both')),
+    localization   VARCHAR(255),
+    hourly_rate    NUMERIC(10, 2) NOT NULL,
+    updated_at     TIMESTAMP      NOT NULL DEFAULT NOW(),
+
+    UNIQUE (tutor_id, subject_id, level_id, lesson_type),
+    -- in-person or both requires a localization
+    CHECK (lesson_type = 'online' OR localization IS NOT NULL)
+);
+
+-- ------------------------------------------------------------
+-- TUTOR AVAILABILITY
+-- ------------------------------------------------------------
+CREATE TABLE Tutor_availability (
+    tutor_availability_id SERIAL PRIMARY KEY,
+    tutor_id              INT         NOT NULL REFERENCES Users(user_id),
+    start_time            TIMESTAMP   NOT NULL,
+    end_time              TIMESTAMP   NOT NULL,
+    localization          VARCHAR(255),
+
+    CHECK (start_time < end_time)
+);
+
+-- ------------------------------------------------------------
+-- LESSON REQUESTS
+-- ------------------------------------------------------------
+CREATE TABLE Lesson_requests (
+    request_id            SERIAL PRIMARY KEY,
+    student_id            INT         NOT NULL REFERENCES Users(user_id),
+    tutorOffers_id        INT         NOT NULL REFERENCES TutorOffers(tutorOffers_id),
+    requested_time_start  TIMESTAMP   NOT NULL,
+    requested_time_end    TIMESTAMP   NOT NULL,
+    status                VARCHAR(10) NOT NULL DEFAULT 'pending'
+                            CHECK (status IN ('pending', 'accepted', 'rejected')),
+    created_at            TIMESTAMP   NOT NULL DEFAULT NOW(),
+    updated_at            TIMESTAMP   NOT NULL DEFAULT NOW(),
+
+    UNIQUE (student_id, tutorOffers_id, requested_time_start),
+    CHECK (requested_time_start < requested_time_end)
+);
+
+-- ------------------------------------------------------------
+-- LESSONS
+-- ------------------------------------------------------------
+CREATE TABLE Lessons (
+    lesson_id    SERIAL PRIMARY KEY,
+    request_id   INT         NOT NULL REFERENCES Lesson_requests(request_id),
+    status       VARCHAR(10) NOT NULL DEFAULT 'scheduled'
+                   CHECK (status IN ('scheduled', 'completed', 'cancelled')),
+    meeting_url  VARCHAR(500),
+    is_paid      BOOLEAN     NOT NULL DEFAULT FALSE,
+    updated_at   TIMESTAMP   NOT NULL DEFAULT NOW(),
+
+    UNIQUE (request_id)
+);
+
+-- ------------------------------------------------------------
+-- REVIEWS
+-- ------------------------------------------------------------
+CREATE TABLE Reviews (
+    review_id  SERIAL PRIMARY KEY,
+    lesson_id  INT            NOT NULL REFERENCES Lessons(lesson_id),
+    tutor_id   INT            NOT NULL REFERENCES Users(user_id),
+    student_id INT                     REFERENCES Users(user_id),  -- NULL = anonymous
+    rate       NUMERIC(3, 1)  NOT NULL,
+    comment    TEXT,
+
+    UNIQUE (lesson_id),
+    CHECK (rate >= 1 AND rate <= 5),
+    -- only 0.5-step increments (1.0, 1.5, 2.0 … 5.0)
+    CHECK (rate * 2 = FLOOR(rate * 2))
+);
+
+-- ------------------------------------------------------------
+-- WHITEBOARDS
+-- ------------------------------------------------------------
+CREATE TABLE Whiteboards (
+    whiteboard_id SERIAL PRIMARY KEY,
+    lesson_id     INT         NOT NULL REFERENCES Lessons(lesson_id),
+    image_url     VARCHAR(500) NOT NULL,
+    created_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
+
+    UNIQUE (lesson_id)
+);
+
+-- ------------------------------------------------------------
+-- CONVERSATIONS
+-- ------------------------------------------------------------
+CREATE TABLE Conversations (
+    conversation_id SERIAL PRIMARY KEY,
+    tutor_id        INT       NOT NULL REFERENCES Users(user_id),
+    student_id      INT       NOT NULL REFERENCES Users(user_id),
+    created_at      TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    UNIQUE (tutor_id, student_id)
+);
+
+-- ------------------------------------------------------------
+-- MESSAGES
+-- ------------------------------------------------------------
+CREATE TABLE Messages (
+    message_id      SERIAL PRIMARY KEY,
+    conversation_id INT         NOT NULL REFERENCES Conversations(conversation_id),
+    sender_id       INT         NOT NULL REFERENCES Users(user_id),
+    whiteboard_id   INT                  REFERENCES Whiteboards(whiteboard_id),
+    message_type    VARCHAR(10) NOT NULL
+                      CHECK (message_type IN ('text', 'image', 'whiteboard')),
+    is_read         BOOLEAN     NOT NULL DEFAULT FALSE,
+    content         TEXT,
+    file_url        VARCHAR(500),
+    sent_at         TIMESTAMP   NOT NULL DEFAULT NOW(),
+
+    -- text messages must have content
+    CHECK (message_type != 'text' OR content IS NOT NULL)
+);
