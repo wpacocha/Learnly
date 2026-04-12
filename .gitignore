@@ -1,0 +1,38 @@
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio / VS Code
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Rider
+.idea/
+
+## NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/
+
+## OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+## Secrets (never commit real keys)
+**/appsettings.*.local.json
+*.pfx
+
+## EF / tooling
+*.db
+*.db-shm
+*.db-wal
