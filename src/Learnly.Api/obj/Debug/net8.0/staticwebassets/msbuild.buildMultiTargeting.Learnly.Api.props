@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../build/Learnly.Api.props" />
+</Project>
