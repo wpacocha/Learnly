@@ -1,0 +1,23 @@
+﻿<Properties StartupConfiguration="{D4E5F678-90AB-CDEF-1234-567890123456}|Default">
+  <MonoDevelop.Ide.Workbench>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="Learnly" expanded="True">
+            <Node name="Learnly.Api" expanded="True" />
+            <Node name="Learnly.Application" expanded="True" />
+            <Node name="Learnly.Domain" expanded="True" />
+            <Node name="Learnly.Infrastructure" expanded="True" />
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.Learnly.Api PreferredExecutionTarget="/Applications/Google Chrome.app" />
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+</Properties>
