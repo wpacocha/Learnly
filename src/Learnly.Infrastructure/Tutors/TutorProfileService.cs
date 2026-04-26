@@ -53,9 +53,12 @@ public sealed class TutorProfileService : ITutorProfileService
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            Headline = dto.Headline.Trim(),
-            Bio = dto.Bio.Trim(),
+            FirstName = dto.FirstName.Trim(),
+            LastName = dto.LastName.Trim(),
+            Subject = dto.Subject.Trim(),
+            TeachingLevel = dto.TeachingLevel.Trim(),
             Location = dto.Location.Trim(),
+            Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim(),
             HourlyRate = dto.HourlyRate,
             PhotoUrl = string.IsNullOrWhiteSpace(dto.PhotoUrl) ? null : dto.PhotoUrl.Trim(),
             CreatedAtUtc = now,
@@ -63,7 +66,14 @@ public sealed class TutorProfileService : ITutorProfileService
         };
 
         _db.TutorProfiles.Add(entity);
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return (null, "Nie udało się zapisać profilu. Upewnij się, że konto tutora jest poprawne i spróbuj ponownie.");
+        }
 
         return (Map(entity), null);
     }
@@ -84,14 +94,24 @@ public sealed class TutorProfileService : ITutorProfileService
             return (null, "No tutor profile exists for this account.");
         }
 
-        entity.Headline = dto.Headline.Trim();
-        entity.Bio = dto.Bio.Trim();
+        entity.FirstName = dto.FirstName.Trim();
+        entity.LastName = dto.LastName.Trim();
+        entity.Subject = dto.Subject.Trim();
+        entity.TeachingLevel = dto.TeachingLevel.Trim();
         entity.Location = dto.Location.Trim();
+        entity.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
         entity.HourlyRate = dto.HourlyRate;
         entity.PhotoUrl = string.IsNullOrWhiteSpace(dto.PhotoUrl) ? null : dto.PhotoUrl.Trim();
         entity.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return (null, "Nie udało się zaktualizować profilu.");
+        }
 
         return (Map(entity), null);
     }
@@ -100,9 +120,12 @@ public sealed class TutorProfileService : ITutorProfileService
         new(
             p.Id,
             p.UserId,
-            p.Headline,
-            p.Bio,
+            p.FirstName,
+            p.LastName,
+            p.Subject,
+            p.TeachingLevel,
             p.Location,
+            p.Description,
             p.HourlyRate,
             p.PhotoUrl,
             p.CreatedAtUtc,

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "u0KE7YK7wDA=",
+  "success": true,
+  "projectFilePath": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/Learnly.Application.csproj",
+  "expectedPackageFiles": [
+    "/Users/wpacocha/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.2/microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512"
+  ],
+  "logs": []
+}

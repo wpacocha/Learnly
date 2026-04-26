@@ -1,4 +1,6 @@
-using Learnly.Domain.Entities;using Learnly.Infrastructure.Identity;
+using Learnly.Domain.Entities;
+using Learnly.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 

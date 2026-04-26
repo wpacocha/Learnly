@@ -69,18 +69,17 @@ partial class LearnlyDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("Learnly.Domain.Entities.TutorProfile", b =>
         {
-            b.Property<string>("Bio")
-                .IsRequired()
-                .HasMaxLength(4000)
-                .HasColumnType("character varying(4000)");
-
             b.Property<DateTimeOffset>("CreatedAtUtc")
                 .HasColumnType("timestamp with time zone");
 
-            b.Property<string>("Headline")
+            b.Property<string>("Description")
+                .HasMaxLength(4000)
+                .HasColumnType("character varying(4000)");
+
+            b.Property<string>("FirstName")
                 .IsRequired()
-                .HasMaxLength(200)
-                .HasColumnType("character varying(200)");
+                .HasMaxLength(100)
+                .HasColumnType("character varying(100)");
 
             b.Property<decimal>("HourlyRate")
                 .HasPrecision(10, 2)
@@ -88,6 +87,11 @@ partial class LearnlyDbContextModelSnapshot : ModelSnapshot
 
             b.Property<Guid>("Id")
                 .HasColumnType("uuid");
+
+            b.Property<string>("LastName")
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnType("character varying(100)");
 
             b.Property<string>("Location")
                 .IsRequired()
@@ -97,6 +101,16 @@ partial class LearnlyDbContextModelSnapshot : ModelSnapshot
             b.Property<string>("PhotoUrl")
                 .HasMaxLength(2000)
                 .HasColumnType("character varying(2000)");
+
+            b.Property<string>("Subject")
+                .IsRequired()
+                .HasMaxLength(200)
+                .HasColumnType("character varying(200)");
+
+            b.Property<string>("TeachingLevel")
+                .IsRequired()
+                .HasMaxLength(200)
+                .HasColumnType("character varying(200)");
 
             b.Property<DateTimeOffset>("UpdatedAtUtc")
                 .HasColumnType("timestamp with time zone");

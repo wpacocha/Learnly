@@ -82,7 +82,7 @@ public sealed class AuthService : IAuthService
     private async Task<AuthResult> BuildAuthResponseAsync(ApplicationUser user)
     {
         var email = user.Email ?? string.Empty;
-        var roles = await _userManager.GetRolesAsync(user);
+        var roles = (await _userManager.GetRolesAsync(user)).ToArray();
         var token = _jwtTokenGenerator.CreateAccessToken(user.Id, email, roles);
         var expires = DateTimeOffset.UtcNow.AddMinutes(_jwtOptions.AccessTokenMinutes);
 

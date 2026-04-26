@@ -1,0 +1,16 @@
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/bin/Debug/net8.0/Learnly.Application.deps.json
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/bin/Debug/net8.0/Learnly.Application.dll
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/bin/Debug/net8.0/Learnly.Application.pdb
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/bin/Debug/net8.0/Learnly.Domain.dll
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/bin/Debug/net8.0/Learnly.Domain.pdb
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/Debug/net8.0/Learnly.Application.csproj.AssemblyReference.cache
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/Debug/net8.0/Learnly.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/Debug/net8.0/Learnly.Application.AssemblyInfoInputs.cache
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/Debug/net8.0/Learnly.Application.AssemblyInfo.cs
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/Debug/net8.0/Learnly.Application.csproj.CoreCompileInputs.cache
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/Debug/net8.0/Learnly.Application.sourcelink.json
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/Debug/net8.0/Learnly..DCD3DF72.Up2Date
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/Debug/net8.0/Learnly.Application.dll
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/Debug/net8.0/refint/Learnly.Application.dll
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/Debug/net8.0/Learnly.Application.pdb
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/Debug/net8.0/ref/Learnly.Application.dll
