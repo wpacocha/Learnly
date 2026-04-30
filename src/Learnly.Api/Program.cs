@@ -3,6 +3,7 @@ using System.Text;
 using Learnly.Application;
 using Learnly.Application.Auth;
 using Learnly.Infrastructure;
+using Learnly.Api.Hubs;
 using Learnly.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -77,6 +78,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             RoleClaimType = ClaimTypes.Role,
             NameClaimType = ClaimTypes.NameIdentifier
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken)
+                    && (path.StartsWithSegments("/hubs/lesson-chat") || path.StartsWithSegments("/hubs/whiteboard")))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -115,5 +132,7 @@ app.UseCors("ReactClient");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<LessonChatHub>("/hubs/lesson-chat");
+app.MapHub<WhiteboardHub>("/hubs/whiteboard");
 
 app.Run();
