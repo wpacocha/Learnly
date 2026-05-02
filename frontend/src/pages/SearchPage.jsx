@@ -1,265 +1,372 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { fetchSubjects, fetchTeachingLevels } from '../api/catalogApi'
+import { searchTutors } from '../api/tutorSearchApi'
 
-const mockedTutors = [
-  {
-    id: 1,
-    name: 'Anna Kowalska',
-    subject: 'Matematyka',
-    level: 'Liceum',
-    location: 'Warszawa',
-    hourlyRate: 80,
-    rating: 4.9,
-  },
-  {
-    id: 2,
-    name: 'Michał Nowak',
-    subject: 'Język angielski',
-    level: 'Egzamin ósmoklasisty',
-    location: 'Kraków',
-    hourlyRate: 70,
-    rating: 4.7,
-  },
-  {
-    id: 3,
-    name: 'Karolina Wiśniewska',
-    subject: 'Fizyka',
-    level: 'Matura rozszerzona',
-    location: 'Gdańsk',
-    hourlyRate: 95,
-    rating: 5.0,
-  },
-]
+/** Górny limit suwaka stawki (PLN/h); pełny zakres = brak filtrowania po górnej granicy. */
+const RATE_SLIDER_MAX = 500
+
+const emptyFilters = {
+  subjectId: '',
+  teachingLevelId: '',
+  teachingMode: '',
+  location: '',
+  availableFrom: '',
+  rateMin: 0,
+  rateMax: RATE_SLIDER_MAX,
+}
+
+const teachingModeLabel = (m) => {
+  if (m === 0) return 'Online'
+  if (m === 1) return 'Stacjonarnie'
+  return 'Online i stacjonarnie'
+}
+
+const formatSubjectNames = (ids, byId) =>
+  ids?.length ? ids.map((id) => byId.get(id) ?? `#${id}`).join(', ') : '—'
+
+const formatPln = (value) =>
+  Number(value).toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+
+const formatWynikCount = (n) => {
+  if (n === 1) return '1 wynik'
+  const mod100 = n % 100
+  const mod10 = n % 10
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 > 20)) {
+    return `${n} wyniki`
+  }
+  return `${n} wyników`
+}
+
+const buildSearchParams = (f) => {
+  const params = {}
+  if (f.subjectId) {
+    params.subjectId = Number(f.subjectId)
+  }
+  if (f.teachingLevelId) {
+    params.teachingLevelId = Number(f.teachingLevelId)
+  }
+  if (f.teachingMode !== '') {
+    params.teachingMode = Number(f.teachingMode)
+  }
+  if (f.location.trim() && f.teachingMode !== '0') {
+    params.location = f.location.trim()
+  }
+  if (f.availableFrom) {
+    params.availableFromUtc = new Date(f.availableFrom).toISOString()
+  }
+  return params
+}
+
+const applyRateFilters = (list, f) => {
+  let next = list
+  if (f.rateMin > 0) {
+    next = next.filter((t) => (t.maxHourlyRate ?? t.hourlyRate ?? 0) >= f.rateMin)
+  }
+  if (f.rateMax < RATE_SLIDER_MAX) {
+    next = next.filter((t) => (t.minHourlyRate ?? t.hourlyRate ?? 0) <= f.rateMax)
+  }
+  return next
+}
 
 const SearchPage = () => {
-  const rateBounds = useMemo(() => {
-    const rates = mockedTutors.map((tutor) => tutor.hourlyRate)
-    return {
-      min: Math.min(...rates),
-      max: Math.max(...rates),
+  const [subjects, setSubjects] = useState([])
+  const [levels, setLevels] = useState([])
+  const [filters, setFilters] = useState(emptyFilters)
+  const [results, setResults] = useState([])
+  const [isLoadingCatalog, setIsLoadingCatalog] = useState(true)
+  const [isSearching, setIsSearching] = useState(false)
+  const [error, setError] = useState('')
+
+  const subjectById = useMemo(() => new Map(subjects.map((s) => [s.id, s.name])), [subjects])
+  const levelById = useMemo(() => new Map(levels.map((l) => [l.id, l.name])), [levels])
+
+  const runSearch = useCallback(async (f) => {
+    setIsSearching(true)
+    setError('')
+    try {
+      const data = await searchTutors(buildSearchParams(f))
+      const list = Array.isArray(data) ? data : []
+      setResults(applyRateFilters(list, f))
+    } catch {
+      setError('Wyszukiwanie nie powiodło się. Sprawdź, czy API działa.')
+      setResults([])
+    } finally {
+      setIsSearching(false)
     }
   }, [])
 
-  const [filters, setFilters] = useState({
-    subject: '',
-    level: '',
-    location: '',
-    minRate: rateBounds.min,
-    maxRate: rateBounds.max,
-    minRating: '',
-  })
+  useEffect(() => {
+    let cancelled = false
 
-  const subjects = useMemo(
-    () => [...new Set(mockedTutors.map((tutor) => tutor.subject))].sort((a, b) => a.localeCompare(b)),
-    [],
-  )
-  const levels = useMemo(
-    () => [...new Set(mockedTutors.map((tutor) => tutor.level))].sort((a, b) => a.localeCompare(b)),
-    [],
-  )
-  const rateRangeStyle = useMemo(() => {
-    const total = rateBounds.max - rateBounds.min
-    const minPercent = ((Number(filters.minRate) - rateBounds.min) / total) * 100
-    const maxPercent = ((Number(filters.maxRate) - rateBounds.min) / total) * 100
+    ;(async () => {
+      setIsLoadingCatalog(true)
+      setError('')
+      try {
+        const [s, l] = await Promise.all([fetchSubjects(), fetchTeachingLevels()])
+        if (cancelled) {
+          return
+        }
+        setSubjects(s)
+        setLevels(l)
+        await runSearch(emptyFilters)
+      } catch {
+        if (!cancelled) {
+          setError('Nie udało się pobrać katalogu przedmiotów i poziomów.')
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingCatalog(false)
+        }
+      }
+    })()
 
-    return {
-      background: `linear-gradient(to right, #cbd5e1 0%, #cbd5e1 ${minPercent}%, #4f46e5 ${minPercent}%, #4f46e5 ${maxPercent}%, #cbd5e1 ${maxPercent}%, #cbd5e1 100%)`,
+    return () => {
+      cancelled = true
     }
-  }, [filters.maxRate, filters.minRate, rateBounds.max, rateBounds.min])
-
-  const filteredTutors = useMemo(() => {
-    const normalizedLocation = filters.location.trim().toLowerCase()
-    const minRate = Number(filters.minRate)
-    const maxRate = Number(filters.maxRate)
-    const minRating = Number(filters.minRating) || 0
-
-    return mockedTutors.filter((tutor) => {
-      const matchesSubject = !filters.subject || tutor.subject === filters.subject
-      const matchesLevel = !filters.level || tutor.level === filters.level
-      const matchesLocation =
-        !normalizedLocation || tutor.location.toLowerCase().includes(normalizedLocation)
-      const matchesRate = tutor.hourlyRate >= minRate && tutor.hourlyRate <= maxRate
-      const matchesRating = tutor.rating >= minRating
-
-      return matchesSubject && matchesLevel && matchesLocation && matchesRate && matchesRating
-    })
-  }, [filters])
+  }, [runSearch])
 
   const handleFilterChange = (event) => {
     const { name, value } = event.target
-    setFilters((currentFilters) => ({ ...currentFilters, [name]: value }))
+    setFilters((prev) => {
+      const next = { ...prev, [name]: value }
+      if (name === 'teachingMode' && value === '0') {
+        next.location = ''
+      }
+      return next
+    })
   }
 
-  const handleRateChange = (event) => {
-    const { name, value } = event.target
-    const numericValue = Number(value)
+  const handleRateMinChange = (event) => {
+    const v = Number(event.target.value)
+    setFilters((prev) => ({ ...prev, rateMin: Math.min(v, prev.rateMax) }))
+  }
 
-    setFilters((currentFilters) => {
-      if (name === 'minRate') {
-        return {
-          ...currentFilters,
-          minRate: Math.min(numericValue, Number(currentFilters.maxRate)),
-        }
-      }
+  const handleRateMaxChange = (event) => {
+    const v = Number(event.target.value)
+    setFilters((prev) => ({ ...prev, rateMax: Math.max(v, prev.rateMin) }))
+  }
 
-      return {
-        ...currentFilters,
-        maxRate: Math.max(numericValue, Number(currentFilters.minRate)),
-      }
-    })
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    runSearch(filters)
   }
 
   const handleResetFilters = () => {
-    setFilters({
-      subject: '',
-      level: '',
-      location: '',
-      minRate: rateBounds.min,
-      maxRate: rateBounds.max,
-      minRating: '',
-    })
+    setFilters(emptyFilters)
+    runSearch(emptyFilters)
+  }
+
+  const showLocationField = filters.teachingMode !== '0'
+
+  if (isLoadingCatalog) {
+    return (
+      <main className="page-shell search-page-shell">
+        <section className="card centered loading-state">
+          <p>Ładowanie katalogu…</p>
+        </section>
+      </main>
+    )
   }
 
   return (
     <main className="page-shell search-page-shell">
-      <section className="card search-panel">
-        <div className="search-header">
-          <h1>Wyszukiwanie tutorów</h1>
-          <p className="muted">Widok korzysta obecnie z mockowanych danych.</p>
-        </div>
-        <form className="search-filters" onSubmit={(event) => event.preventDefault()}>
-          <label className="stack filter-field" htmlFor="subject">
-            Przedmiot
-            <select id="subject" name="subject" onChange={handleFilterChange} value={filters.subject}>
+      <div className="search-page-intro">
+        <h1>Znajdź tutora</h1>
+        <p className="page-lead">
+          Użyj filtrów poniżej, a pod nimi zobaczysz dopasowanych korepetytorów.
+        </p>
+      </div>
+
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+
+      <form className="search-toolbar" onSubmit={handleSubmit}>
+        <div className="search-toolbar__main">
+          <label className="search-field search-field--subject" htmlFor="subjectId">
+            <span className="search-field__label">Przedmiot</span>
+            <select id="subjectId" name="subjectId" value={filters.subjectId} onChange={handleFilterChange}>
               <option value="">Wszystkie</option>
-              {subjects.map((subject) => (
-                <option key={subject} value={subject}>
-                  {subject}
+              {subjects.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
                 </option>
               ))}
             </select>
           </label>
 
-          <label className="stack filter-field" htmlFor="level">
-            Poziom
-            <select id="level" name="level" onChange={handleFilterChange} value={filters.level}>
-              <option value="">Wszystkie</option>
-              {levels.map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="stack filter-field" htmlFor="location">
-            Lokalizacja
-            <input
-              id="location"
-              name="location"
+          <label className="search-field search-field--level" htmlFor="teachingLevelId">
+            <span className="search-field__label">Poziom</span>
+            <select
+              id="teachingLevelId"
+              name="teachingLevelId"
+              value={filters.teachingLevelId}
               onChange={handleFilterChange}
-              placeholder="np. Warszawa"
-              type="text"
-              value={filters.location}
+            >
+              <option value="">Wszystkie</option>
+              {levels.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="search-field search-field--mode" htmlFor="teachingMode">
+            <span className="search-field__label">Tryb</span>
+            <select
+              id="teachingMode"
+              name="teachingMode"
+              value={filters.teachingMode}
+              onChange={handleFilterChange}
+            >
+              <option value="">Dowolny</option>
+              <option value="0">Online</option>
+              <option value="1">Stacjonarnie</option>
+              <option value="2">Online i stacjonarnie</option>
+            </select>
+          </label>
+
+          {showLocationField && (
+            <label className="search-field search-field--location" htmlFor="location">
+              <span className="search-field__label">Lokalizacja</span>
+              <input
+                id="location"
+                name="location"
+                type="text"
+                value={filters.location}
+                onChange={handleFilterChange}
+                placeholder={
+                  filters.teachingMode === ''
+                    ? 'Opcjonalnie — głównie dla stacjonarnie / hybryda'
+                    : 'np. Warszawa'
+                }
+                autoComplete="off"
+              />
+            </label>
+          )}
+        </div>
+
+        <div className="search-toolbar__secondary">
+          <label className="search-field search-field--date" htmlFor="availableFrom">
+            <span className="search-field__label">Dostępny od</span>
+            <input
+              id="availableFrom"
+              name="availableFrom"
+              type="datetime-local"
+              value={filters.availableFrom}
+              onChange={handleFilterChange}
             />
           </label>
 
-          <div className="stack filter-field rate-range">
-            <div className="rate-range-header">
-              <span>Stawka (PLN/h)</span>
-              <strong>
-                {filters.minRate} - {filters.maxRate}
-              </strong>
-            </div>
-            <div className="rate-range-sliders" style={rateRangeStyle}>
-              <input
-                aria-label="Minimalna stawka"
-                id="minRate"
-                max={rateBounds.max}
-                min={rateBounds.min}
-                name="minRate"
-                onChange={handleRateChange}
-                type="range"
-                value={filters.minRate}
-              />
-              <input
-                aria-label="Maksymalna stawka"
-                id="maxRate"
-                max={rateBounds.max}
-                min={rateBounds.min}
-                name="maxRate"
-                onChange={handleRateChange}
-                type="range"
-                value={filters.maxRate}
-              />
-            </div>
-          </div>
-
-          <label className="stack filter-field" htmlFor="minRating">
-            Minimalna ocena
-            <select
-              id="minRating"
-              name="minRating"
-              onChange={handleFilterChange}
-              value={filters.minRating}
-            >
-              <option value="">Dowolna</option>
-              <option value="4.0">4.0+</option>
-              <option value="4.5">4.5+</option>
-              <option value="4.8">4.8+</option>
-              <option value="5.0">5.0</option>
-            </select>
-          </label>
-
-          <div className="search-filters-actions">
-            <button
-              aria-label="Wyczyść filtry"
-              className="btn secondary icon-btn"
-              onClick={handleResetFilters}
-              title="Wyczyść filtry"
-              type="button"
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path
-                  d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v8h-2V9zm4 0h2v8h-2V9zM7 9h2v8H7V9zm-1 12h12l1-13H5l1 13z"
-                  fill="currentColor"
+          <div className="search-toolbar__rate">
+            <div className="rate-range" role="group" aria-label="Zakres stawki godzinowej">
+              <div className="rate-range-header">
+                <span>Stawka (PLN/h)</span>
+                <strong>
+                  {filters.rateMin === 0 && filters.rateMax === RATE_SLIDER_MAX
+                    ? 'Dowolna'
+                    : `${filters.rateMin} – ${filters.rateMax} PLN`}
+                </strong>
+              </div>
+              <div className="rate-range-sliders">
+                <input
+                  aria-label="Minimalna stawka"
+                  type="range"
+                  min={0}
+                  max={RATE_SLIDER_MAX}
+                  step={5}
+                  value={filters.rateMin}
+                  onChange={handleRateMinChange}
                 />
-              </svg>
+                <input
+                  aria-label="Maksymalna stawka"
+                  type="range"
+                  min={0}
+                  max={RATE_SLIDER_MAX}
+                  step={5}
+                  value={filters.rateMax}
+                  onChange={handleRateMaxChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="search-toolbar__actions">
+            <button className="btn primary" type="submit" disabled={isSearching}>
+              {isSearching ? 'Szukam…' : 'Szukaj'}
+            </button>
+            <button type="button" className="btn secondary" onClick={handleResetFilters}>
+              Wyczyść filtry
             </button>
           </div>
-        </form>
-        <p className="muted search-results-count">
-          Znaleziono {filteredTutors.length} {filteredTutors.length === 1 ? 'tutora' : 'tutorów'}.
-        </p>
-      </section>
+        </div>
+      </form>
 
-      <section className="tutor-grid">
-        {filteredTutors.map((tutor) => (
-          <article className="card tutor-card" key={tutor.id}>
-            <h2>{tutor.name}</h2>
-            <p>
-              <strong>Przedmiot:</strong> {tutor.subject}
+      <div className="search-results-bar">
+        <span className="search-results-bar__count">
+          {results.length === 0
+            ? 'Brak wyników przy tych kryteriach.'
+            : formatWynikCount(results.length)}
+        </span>
+      </div>
+
+      <section className="tutor-grid search-results-grid" aria-label="Wyniki wyszukiwania">
+        {results.map((tutor) => (
+          <article className="card tutor-card" key={tutor.tutorProfileId}>
+            <div className="tutor-card__head">
+              <h2 className="tutor-card__title">
+                {[tutor.firstName, tutor.lastName].filter(Boolean).join(' ') || '—'}
+              </h2>
+              <span className="tutor-card__rate">
+                {tutor.minHourlyRate != null && tutor.maxHourlyRate != null
+                  ? tutor.minHourlyRate === tutor.maxHourlyRate
+                    ? `${formatPln(tutor.minHourlyRate)} PLN/h`
+                    : `${formatPln(tutor.minHourlyRate)}–${formatPln(tutor.maxHourlyRate)} PLN/h`
+                  : `${formatPln(tutor.hourlyRate)} PLN/h`}
+              </span>
+            </div>
+            {Array.isArray(tutor.offerings) && tutor.offerings.length > 0 && (
+              <ul className="tutor-card__offerings muted" style={{ margin: '0 0 8px', paddingLeft: '1.1rem' }}>
+                {tutor.offerings.map((o, idx) => (
+                  <li key={`${o.subjectId}-${idx}`} style={{ marginBottom: 4 }}>
+                    <strong>{subjectById.get(o.subjectId) ?? `Przedmiot #${o.subjectId}`}</strong>
+                    {' · '}
+                    {teachingModeLabel(o.teachingMode)}
+                    {(o.teachingMode === 1 || o.teachingMode === 2) && o.location ? ` · ${o.location}` : ''}
+                    {' · '}
+                    {formatPln(o.hourlyRate)} PLN/h · {o.durationMinutes} min
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="tutor-card__meta">
+              <strong>Przedmioty</strong>
+              {formatSubjectNames(tutor.subjectIds, subjectById)}
             </p>
-            <p>
-              <strong>Poziom:</strong> {tutor.level}
+            <p className="tutor-card__meta">
+              <strong>Poziomy</strong>
+              {formatSubjectNames(tutor.teachingLevelIds, levelById)}
             </p>
-            <p>
-              <strong>Lokalizacja:</strong> {tutor.location}
+            <p className="tutor-card__meta muted">
+              <strong>Wolne sloty</strong>
+              {tutor.availableSlots?.length ?? 0}
             </p>
-            <p>
-              <strong>Stawka:</strong> {tutor.hourlyRate} PLN/h
-            </p>
-            <p>
-              <strong>Ocena:</strong> {tutor.rating}
-            </p>
-            <button className="btn secondary" type="button">
-              Zobacz profil
-            </button>
+            <Link className="btn primary" to={`/tutors/${tutor.tutorProfileId}`} state={{ tutor }}>
+              Profil i rezerwacja
+            </Link>
           </article>
         ))}
-        {!filteredTutors.length && (
-          <article className="card">
+        {!results.length && (
+          <article className="card search-empty-card">
             <h2>Brak wyników</h2>
-            <p className="muted">Spróbuj zmienić kryteria filtrowania.</p>
+            <p className="muted">
+              Poszerz zakres stawki, usuń filtr daty albo wybierz inny przedmiot. Upewnij się też, że tutorzy mają
+              wypełnioną dostępność.
+            </p>
           </article>
         )}
       </section>

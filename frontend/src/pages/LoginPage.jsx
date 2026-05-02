@@ -24,7 +24,7 @@ const LoginPage = () => {
       await login(form.email, form.password)
       const redirectPath = location.state?.from?.pathname ?? '/dashboard'
       navigate(redirectPath, { replace: true })
-    } catch (_err) {
+    } catch {
       setError('Nie udało się zalogować. Sprawdź dane i spróbuj ponownie.')
     } finally {
       setIsSubmitting(false)
@@ -35,7 +35,7 @@ const LoginPage = () => {
     <main className="page-shell auth-layout">
       <section className="card auth-card">
         <h1>Logowanie</h1>
-        <p className="muted">Zaloguj się, aby zarządzać swoim kontem w Learnly.</p>
+        <p className="page-lead">Zaloguj się, aby korzystać z lekcji i profilu w Learnly.</p>
         <form onSubmit={handleSubmit} className="form">
           <label htmlFor="email">Email</label>
           <input
@@ -57,14 +57,21 @@ const LoginPage = () => {
             required
           />
 
-          {error && <p className="error">{error}</p>}
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
 
           <button className="btn primary" type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Logowanie...' : 'Zaloguj się'}
           </button>
         </form>
         <p className="muted">
-          Nie masz konta? <Link to="/register">Zarejestruj się</Link>
+          Nie masz konta?{' '}
+          <Link className="text-link" to="/register">
+            Załóż konto
+          </Link>
         </p>
       </section>
     </main>

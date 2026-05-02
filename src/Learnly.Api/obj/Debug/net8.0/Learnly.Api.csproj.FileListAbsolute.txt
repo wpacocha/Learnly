@@ -128,3 +128,4 @@
 /Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Api/obj/Debug/net8.0/Learnly.Api.pdb
 /Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Api/obj/Debug/net8.0/Learnly.Api.genruntimeconfig.cache
 /Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Api/obj/Debug/net8.0/ref/Learnly.Api.dll
+/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Api/bin/Debug/net8.0/Learnly.Api.staticwebassets.runtime.json

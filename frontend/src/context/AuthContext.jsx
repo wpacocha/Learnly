@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- context module exports hook + provider */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { getCurrentUser, loginUser, registerUser } from '../api/authApi'
 import { TOKEN_KEY } from '../api/client'
@@ -19,7 +20,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const currentUser = await getCurrentUser()
         setUser(currentUser)
-      } catch (_error) {
+      } catch {
         localStorage.removeItem(TOKEN_KEY)
         setToken(null)
         setUser(null)

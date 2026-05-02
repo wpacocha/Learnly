@@ -53,10 +53,9 @@ public sealed class TutorProfileService : ITutorProfileService
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            Headline = dto.Headline.Trim(),
+            FirstName = dto.FirstName.Trim(),
+            LastName = dto.LastName.Trim(),
             Bio = dto.Bio.Trim(),
-            Location = dto.Location.Trim(),
-            HourlyRate = dto.HourlyRate,
             PhotoUrl = string.IsNullOrWhiteSpace(dto.PhotoUrl) ? null : dto.PhotoUrl.Trim(),
             CreatedAtUtc = now,
             UpdatedAtUtc = now
@@ -84,10 +83,9 @@ public sealed class TutorProfileService : ITutorProfileService
             return (null, "No tutor profile exists for this account.");
         }
 
-        entity.Headline = dto.Headline.Trim();
+        entity.FirstName = dto.FirstName.Trim();
+        entity.LastName = dto.LastName.Trim();
         entity.Bio = dto.Bio.Trim();
-        entity.Location = dto.Location.Trim();
-        entity.HourlyRate = dto.HourlyRate;
         entity.PhotoUrl = string.IsNullOrWhiteSpace(dto.PhotoUrl) ? null : dto.PhotoUrl.Trim();
         entity.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
@@ -100,10 +98,9 @@ public sealed class TutorProfileService : ITutorProfileService
         new(
             p.Id,
             p.UserId,
-            p.Headline,
+            p.FirstName,
+            p.LastName,
             p.Bio,
-            p.Location,
-            p.HourlyRate,
             p.PhotoUrl,
             p.CreatedAtUtc,
             p.UpdatedAtUtc);

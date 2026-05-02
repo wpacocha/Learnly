@@ -42,7 +42,7 @@ const RegisterPage = () => {
     <main className="page-shell auth-layout">
       <section className="card auth-card">
         <h1>Rejestracja</h1>
-        <p className="muted">Utwórz konto ucznia lub korepetytora.</p>
+        <p className="page-lead">Utwórz konto ucznia lub tutora i zacznij korzystać z platformy.</p>
         <form onSubmit={handleSubmit} className="form">
           <label htmlFor="email">Email</label>
           <input
@@ -71,14 +71,21 @@ const RegisterPage = () => {
             <option value="Tutor">Tutor</option>
           </select>
 
-          {error && <p className="error">{error}</p>}
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
 
           <button className="btn primary" type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Tworzenie konta...' : 'Załóż konto'}
           </button>
         </form>
         <p className="muted">
-          Masz już konto? <Link to="/login">Przejdź do logowania</Link>
+          Masz już konto?{' '}
+          <Link className="text-link" to="/login">
+            Zaloguj się
+          </Link>
         </p>
       </section>
     </main>

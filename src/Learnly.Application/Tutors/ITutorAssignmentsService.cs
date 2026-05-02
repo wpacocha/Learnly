@@ -4,9 +4,9 @@ namespace Learnly.Application.Tutors;
 
 public interface ITutorAssignmentsService
 {
-    Task<TutorSubjectsAndLevelsDto?> GetMineAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TutorTeachingOfferingDto>?> GetMineAsync(CancellationToken cancellationToken = default);
 
-    Task<(TutorSubjectsAndLevelsDto? data, string? error)> UpsertMineAsync(
-        TutorSubjectsAndLevelsUpsertDto dto,
+    Task<(IReadOnlyList<TutorTeachingOfferingDto>? data, string? error)> UpsertMineAsync(
+        TutorOfferingsUpsertDto dto,
         CancellationToken cancellationToken = default);
 }

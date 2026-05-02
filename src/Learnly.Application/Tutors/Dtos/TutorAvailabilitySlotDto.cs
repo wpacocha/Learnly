@@ -2,5 +2,7 @@
 
 public sealed record TutorAvailabilitySlotDto(
     Guid Id,
+    Guid TutorTeachingOfferingId,
+    int SubjectId,
     DateTimeOffset StartUtc,
     DateTimeOffset EndUtc);

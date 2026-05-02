@@ -27,9 +27,14 @@ public sealed class TutorAvailabilityService : ITutorAvailabilityService
         }
 
         return await _db.TutorAvailabilitySlots
+            .AsNoTracking()
             .Where(x => x.TutorProfileId == profile.Id)
             .OrderBy(x => x.StartUtc)
-            .Select(x => new TutorAvailabilitySlotDto(x.Id, x.StartUtc, x.EndUtc))
+            .Join(
+                _db.TutorTeachingOfferings.AsNoTracking(),
+                s => s.TutorTeachingOfferingId,
+                o => o.Id,
+                (s, o) => new TutorAvailabilitySlotDto(s.Id, s.TutorTeachingOfferingId, o.SubjectId, s.StartUtc, s.EndUtc))
             .ToListAsync(cancellationToken);
     }
 
@@ -43,9 +48,24 @@ public sealed class TutorAvailabilityService : ITutorAvailabilityService
             return (null, "Create tutor profile first.");
         }
 
-        if (dto.EndUtc <= dto.StartUtc)
+        var offering = await _db.TutorTeachingOfferings
+            .FirstOrDefaultAsync(
+                x => x.Id == dto.TutorTeachingOfferingId && x.TutorProfileId == profile.Id,
+                cancellationToken);
+        if (offering is null)
         {
-            return (null, "EndUtc must be greater than StartUtc.");
+            return (null, "Nie znaleziono wybranej pozycji (przedmiot w profilu).");
+        }
+
+        if (offering.DurationMinutes < 15)
+        {
+            return (null, "Nieprawidłowa długość lekcji w profilu.");
+        }
+
+        var endUtc = dto.StartUtc.AddMinutes(offering.DurationMinutes);
+        if (endUtc <= dto.StartUtc)
+        {
+            return (null, "Nie udało się wyliczyć końca slotu.");
         }
 
         if (dto.StartUtc <= DateTimeOffset.UtcNow)
@@ -54,9 +74,9 @@ public sealed class TutorAvailabilityService : ITutorAvailabilityService
         }
 
         var overlaps = await _db.TutorAvailabilitySlots.AnyAsync(x =>
-            x.TutorProfileId == profile.Id
-            && dto.StartUtc < x.EndUtc
-            && dto.EndUtc > x.StartUtc,
+                x.TutorProfileId == profile.Id
+                && dto.StartUtc < x.EndUtc
+                && endUtc > x.StartUtc,
             cancellationToken);
 
         if (overlaps)
@@ -68,14 +88,15 @@ public sealed class TutorAvailabilityService : ITutorAvailabilityService
         {
             Id = Guid.NewGuid(),
             TutorProfileId = profile.Id,
+            TutorTeachingOfferingId = offering.Id,
             StartUtc = dto.StartUtc,
-            EndUtc = dto.EndUtc
+            EndUtc = endUtc
         };
 
         _db.TutorAvailabilitySlots.Add(slot);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return (new TutorAvailabilitySlotDto(slot.Id, slot.StartUtc, slot.EndUtc), null);
+        return (new TutorAvailabilitySlotDto(slot.Id, slot.TutorTeachingOfferingId, offering.SubjectId, slot.StartUtc, slot.EndUtc), null);
     }
 
     public async Task<string?> DeleteMineAsync(Guid slotId, CancellationToken cancellationToken = default)

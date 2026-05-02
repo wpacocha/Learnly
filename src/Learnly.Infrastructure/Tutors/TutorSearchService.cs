@@ -1,5 +1,6 @@
 ﻿using Learnly.Application.Tutors;
 using Learnly.Application.Tutors.Dtos;
+using Learnly.Domain.Entities;
 using Learnly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,32 +19,68 @@ public sealed class TutorSearchService : ITutorSearchService
         TutorSearchQueryDto query,
         CancellationToken cancellationToken = default)
     {
-        var tutorProfilesQuery = _db.TutorProfiles.AsNoTracking().AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(query.Location))
-        {
-            var location = query.Location.Trim().ToLower();
-            tutorProfilesQuery = tutorProfilesQuery.Where(p => p.Location.ToLower().Contains(location));
-        }
+        var offeringsQuery = _db.TutorTeachingOfferings.AsNoTracking().AsQueryable();
 
         if (query.SubjectId.HasValue)
         {
-            var tutorIdsForSubject = _db.TutorSubjects
-                .Where(ts => ts.SubjectId == query.SubjectId.Value)
-                .Select(ts => ts.TutorProfileId);
-            tutorProfilesQuery = tutorProfilesQuery.Where(p => tutorIdsForSubject.Contains(p.Id));
+            offeringsQuery = offeringsQuery.Where(o => o.SubjectId == query.SubjectId.Value);
         }
 
         if (query.TeachingLevelId.HasValue)
         {
-            var tutorIdsForLevel = _db.TutorTeachingLevels
-                .Where(tl => tl.TeachingLevelId == query.TeachingLevelId.Value)
-                .Select(tl => tl.TutorProfileId);
-            tutorProfilesQuery = tutorProfilesQuery.Where(p => tutorIdsForLevel.Contains(p.Id));
+            var lid = query.TeachingLevelId.Value;
+            offeringsQuery = offeringsQuery.Where(o =>
+                o.OfferingLevels.Any(l => l.TeachingLevelId == lid));
         }
 
-        var profiles = await tutorProfilesQuery
-            .OrderBy(p => p.HourlyRate)
+        if (query.TeachingMode.HasValue)
+        {
+            var tm = query.TeachingMode.Value;
+            if (tm == TeachingMode.Online)
+            {
+                offeringsQuery = offeringsQuery.Where(o =>
+                    o.TeachingMode == TeachingMode.Online || o.TeachingMode == TeachingMode.Both);
+            }
+            else if (tm == TeachingMode.Stationary)
+            {
+                offeringsQuery = offeringsQuery.Where(o =>
+                    o.TeachingMode == TeachingMode.Stationary || o.TeachingMode == TeachingMode.Both);
+            }
+            else
+            {
+                offeringsQuery = offeringsQuery.Where(o => o.TeachingMode == TeachingMode.Both);
+            }
+        }
+
+        var loc = query.Location?.Trim();
+        var useLocation = !string.IsNullOrEmpty(loc)
+            && (!query.TeachingMode.HasValue
+                || query.TeachingMode == TeachingMode.Stationary
+                || query.TeachingMode == TeachingMode.Both);
+        if (useLocation)
+        {
+            var ll = loc!.ToLower();
+            offeringsQuery = offeringsQuery.Where(o =>
+                (o.TeachingMode == TeachingMode.Stationary || o.TeachingMode == TeachingMode.Both)
+                && o.Location != null
+                && o.Location.ToLower().Contains(ll));
+        }
+
+        var matchingTutorIds = await offeringsQuery
+            .Select(o => o.TutorProfileId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (matchingTutorIds.Count == 0)
+        {
+            return Array.Empty<TutorSearchResultDto>();
+        }
+
+        var profiles = await _db.TutorProfiles
+            .AsNoTracking()
+            .Where(p => matchingTutorIds.Contains(p.Id))
+            .OrderBy(p => p.LastName)
+            .ThenBy(p => p.FirstName)
             .Take(100)
             .ToListAsync(cancellationToken);
 
@@ -54,15 +91,14 @@ public sealed class TutorSearchService : ITutorSearchService
 
         var profileIds = profiles.Select(p => p.Id).ToArray();
 
-        var subjects = await _db.TutorSubjects
-            .Where(x => profileIds.Contains(x.TutorProfileId))
-            .ToListAsync(cancellationToken);
-
-        var levels = await _db.TutorTeachingLevels
-            .Where(x => profileIds.Contains(x.TutorProfileId))
+        var allOfferings = await _db.TutorTeachingOfferings
+            .AsNoTracking()
+            .Include(o => o.OfferingLevels)
+            .Where(o => profileIds.Contains(o.TutorProfileId))
             .ToListAsync(cancellationToken);
 
         var slotsQuery = _db.TutorAvailabilitySlots
+            .AsNoTracking()
             .Where(x => profileIds.Contains(x.TutorProfileId));
 
         if (query.AvailableFromUtc.HasValue)
@@ -79,25 +115,61 @@ public sealed class TutorSearchService : ITutorSearchService
             .OrderBy(x => x.StartUtc)
             .ToListAsync(cancellationToken);
 
-        var result = profiles.Select(profile =>
+        var result = new List<TutorSearchResultDto>();
+        foreach (var profile in profiles)
         {
-            var profileSubjects = subjects.Where(x => x.TutorProfileId == profile.Id).Select(x => x.SubjectId).Distinct().OrderBy(x => x).ToList();
-            var profileLevels = levels.Where(x => x.TutorProfileId == profile.Id).Select(x => x.TeachingLevelId).Distinct().OrderBy(x => x).ToList();
-            var profileSlots = slots.Where(x => x.TutorProfileId == profile.Id)
-                .Select(x => new TutorAvailabilitySlotDto(x.Id, x.StartUtc, x.EndUtc))
+            var pOfferings = allOfferings.Where(x => x.TutorProfileId == profile.Id).ToList();
+            if (pOfferings.Count == 0)
+            {
+                continue;
+            }
+
+            var rates = pOfferings.Select(x => x.HourlyRate).ToList();
+            var minRate = rates.Min();
+            var maxRate = rates.Max();
+
+            var subjectIds = pOfferings.Select(x => x.SubjectId).Distinct().OrderBy(x => x).ToList();
+            var levelIds = pOfferings
+                .SelectMany(x => x.OfferingLevels.Select(l => l.TeachingLevelId))
+                .Distinct()
+                .OrderBy(x => x)
                 .ToList();
 
-            return new TutorSearchResultDto(
-                profile.Id,
-                profile.Headline,
-                profile.Location,
-                profile.HourlyRate,
-                profile.PhotoUrl,
-                profileSubjects,
-                profileLevels,
-                profileSlots);
-        }).ToList();
+            var publicOfferings = pOfferings
+                .Select(o => new TutorOfferingPublicDto(
+                    o.SubjectId,
+                    o.TeachingMode,
+                    o.Location,
+                    o.HourlyRate,
+                    o.DurationMinutes,
+                    o.OfferingLevels.Select(l => l.TeachingLevelId).Distinct().OrderBy(x => x).ToList()))
+                .ToList();
 
-        return result;
+            var profileSlots = slots.Where(x => x.TutorProfileId == profile.Id).ToList();
+            var offeringById = pOfferings.ToDictionary(x => x.Id);
+            var slotDtos = profileSlots
+                .Where(s => offeringById.ContainsKey(s.TutorTeachingOfferingId))
+                .Select(s => new TutorAvailabilitySlotDto(
+                    s.Id,
+                    s.TutorTeachingOfferingId,
+                    offeringById[s.TutorTeachingOfferingId].SubjectId,
+                    s.StartUtc,
+                    s.EndUtc))
+                .ToList();
+
+            result.Add(new TutorSearchResultDto(
+                profile.Id,
+                profile.FirstName,
+                profile.LastName,
+                minRate,
+                maxRate,
+                profile.PhotoUrl,
+                subjectIds,
+                levelIds,
+                publicOfferings,
+                slotDtos));
+        }
+
+        return result.OrderBy(x => x.MinHourlyRate).ToList();
     }
 }

@@ -5,8 +5,8 @@ namespace Learnly.Application.Tutors.Dtos;
 public sealed class TutorAvailabilitySlotCreateDto
 {
     [Required]
-    public DateTimeOffset StartUtc { get; set; }
+    public Guid TutorTeachingOfferingId { get; set; }
 
     [Required]
-    public DateTimeOffset EndUtc { get; set; }
+    public DateTimeOffset StartUtc { get; set; }
 }

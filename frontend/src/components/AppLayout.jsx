@@ -8,16 +8,23 @@ const AppLayout = () => {
     <>
       <header className="topbar">
         <div className="topbar-inner">
-          <NavLink to="/" className="brand">
+          <NavLink to="/" className="brand" end>
+            <span className="brand-mark" aria-hidden />
             Learnly
           </NavLink>
-          <nav className="nav">
+          <nav className="nav" aria-label="Główna nawigacja">
             {isAuthenticated ? (
               <>
-                <NavLink to="/dashboard">Dashboard</NavLink>
-                <NavLink to="/search">Szukaj tutorów</NavLink>
-                <NavLink to="/tutor/profile">Profil tutora</NavLink>
-                <button type="button" className="btn ghost" onClick={logout}>
+                <NavLink to="/dashboard">Panel</NavLink>
+                <NavLink to="/search">Szukaj</NavLink>
+                <NavLink to="/lessons">Lekcje</NavLink>
+                {user.roles?.includes('Tutor') && (
+                  <>
+                    <NavLink to="/tutor/profile">Profil tutora</NavLink>
+                  </>
+                )}
+                <span className="nav-divider" aria-hidden />
+                <button type="button" className="btn nav-logout" onClick={logout}>
                   Wyloguj
                 </button>
               </>

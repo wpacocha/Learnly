@@ -20,7 +20,7 @@ public sealed class CreateTutorOfferRequest
     [MaxLength(255)]
     public string? Localization { get; set; }
 
-    [Range(typeof(decimal), "0.01", "99999.99")]
+    [Range(0.01, 99999.99)]
     public decimal HourlyRate { get; set; }
 }
 

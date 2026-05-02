@@ -18,20 +18,20 @@ public sealed class TutorAssignmentsController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(TutorSubjectsAndLevelsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IReadOnlyList<TutorTeachingOfferingDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TutorSubjectsAndLevelsDto>> GetMine(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<TutorTeachingOfferingDto>>> GetMine(CancellationToken cancellationToken)
     {
         var data = await _service.GetMineAsync(cancellationToken);
         return data is null ? NotFound() : Ok(data);
     }
 
     [HttpPut]
-    [ProducesResponseType(typeof(TutorSubjectsAndLevelsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IReadOnlyList<TutorTeachingOfferingDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<TutorSubjectsAndLevelsDto>> Upsert(
-        [FromBody] TutorSubjectsAndLevelsUpsertDto dto,
+    public async Task<ActionResult<IReadOnlyList<TutorTeachingOfferingDto>>> Upsert(
+        [FromBody] TutorOfferingsUpsertDto dto,
         CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)

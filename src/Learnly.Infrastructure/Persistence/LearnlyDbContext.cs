@@ -16,8 +16,8 @@ public sealed class LearnlyDbContext : IdentityDbContext<ApplicationUser, Identi
     public DbSet<Subject> Subjects => Set<Subject>();
     public DbSet<TeachingLevel> TeachingLevels => Set<TeachingLevel>();
     public DbSet<TutorProfile> TutorProfiles => Set<TutorProfile>();
-    public DbSet<TutorSubject> TutorSubjects => Set<TutorSubject>();
-    public DbSet<TutorTeachingLevel> TutorTeachingLevels => Set<TutorTeachingLevel>();
+    public DbSet<TutorTeachingOffering> TutorTeachingOfferings => Set<TutorTeachingOffering>();
+    public DbSet<TutorOfferingLevel> TutorOfferingLevels => Set<TutorOfferingLevel>();
     public DbSet<TutorAvailabilitySlot> TutorAvailabilitySlots => Set<TutorAvailabilitySlot>();
     public DbSet<Lesson> Lessons => Set<Lesson>();
     public DbSet<Review> Reviews => Set<Review>();

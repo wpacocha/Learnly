@@ -83,7 +83,8 @@ public sealed class AuthService : IAuthService
     {
         var email = user.Email ?? string.Empty;
         var roles = await _userManager.GetRolesAsync(user);
-        var token = _jwtTokenGenerator.CreateAccessToken(user.Id, email, roles);
+        var roleList = roles.ToArray();
+        var token = _jwtTokenGenerator.CreateAccessToken(user.Id, email, roleList);
         var expires = DateTimeOffset.UtcNow.AddMinutes(_jwtOptions.AccessTokenMinutes);
 
         return AuthResult.Success(new AuthResponse(
@@ -91,7 +92,7 @@ public sealed class AuthService : IAuthService
             expires,
             user.Id,
             email,
-            roles));
+            roleList));
     }
 }
 

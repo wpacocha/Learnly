@@ -1,5 +1,12 @@
 import apiClient from './client'
 
+export const uploadTutorPhoto = async (file) => {
+  const body = new FormData()
+  body.append('file', file)
+  const { data } = await apiClient.post('/api/tutor-profile/photo', body)
+  return data.url
+}
+
 export const getTutorProfile = async () => {
   const response = await apiClient.get('/api/tutor-profile', {
     validateStatus: (status) => status === 200 || status === 404,

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "Cfg4byRH6UU=",
+  "dgSpecHash": "Fadb057nDbc=",
   "success": true,
   "projectFilePath": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Infrastructure/Learnly.Infrastructure.csproj",
   "expectedPackageFiles": [
@@ -13,10 +13,16 @@
     "/Users/wpacocha/.nuget/packages/microsoft.entityframeworkcore.relational/8.0.11/microsoft.entityframeworkcore.relational.8.0.11.nupkg.sha512",
     "/Users/wpacocha/.nuget/packages/microsoft.extensions.caching.abstractions/8.0.0/microsoft.extensions.caching.abstractions.8.0.0.nupkg.sha512",
     "/Users/wpacocha/.nuget/packages/microsoft.extensions.caching.memory/8.0.1/microsoft.extensions.caching.memory.8.0.1.nupkg.sha512",
+    "/Users/wpacocha/.nuget/packages/microsoft.extensions.configuration/8.0.0/microsoft.extensions.configuration.8.0.0.nupkg.sha512",
     "/Users/wpacocha/.nuget/packages/microsoft.extensions.configuration.abstractions/8.0.0/microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512",
     "/Users/wpacocha/.nuget/packages/microsoft.extensions.configuration.binder/8.0.0/microsoft.extensions.configuration.binder.8.0.0.nupkg.sha512",
+    "/Users/wpacocha/.nuget/packages/microsoft.extensions.configuration.fileextensions/8.0.0/microsoft.extensions.configuration.fileextensions.8.0.0.nupkg.sha512",
+    "/Users/wpacocha/.nuget/packages/microsoft.extensions.configuration.json/8.0.0/microsoft.extensions.configuration.json.8.0.0.nupkg.sha512",
     "/Users/wpacocha/.nuget/packages/microsoft.extensions.dependencyinjection/8.0.1/microsoft.extensions.dependencyinjection.8.0.1.nupkg.sha512",
     "/Users/wpacocha/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.2/microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
+    "/Users/wpacocha/.nuget/packages/microsoft.extensions.fileproviders.abstractions/8.0.0/microsoft.extensions.fileproviders.abstractions.8.0.0.nupkg.sha512",
+    "/Users/wpacocha/.nuget/packages/microsoft.extensions.fileproviders.physical/8.0.0/microsoft.extensions.fileproviders.physical.8.0.0.nupkg.sha512",
+    "/Users/wpacocha/.nuget/packages/microsoft.extensions.filesystemglobbing/8.0.0/microsoft.extensions.filesystemglobbing.8.0.0.nupkg.sha512",
     "/Users/wpacocha/.nuget/packages/microsoft.extensions.identity.core/8.0.11/microsoft.extensions.identity.core.8.0.11.nupkg.sha512",
     "/Users/wpacocha/.nuget/packages/microsoft.extensions.identity.stores/8.0.11/microsoft.extensions.identity.stores.8.0.11.nupkg.sha512",
     "/Users/wpacocha/.nuget/packages/microsoft.extensions.logging/8.0.1/microsoft.extensions.logging.8.0.1.nupkg.sha512",
@@ -30,7 +36,9 @@
     "/Users/wpacocha/.nuget/packages/microsoft.identitymodel.tokens/8.2.1/microsoft.identitymodel.tokens.8.2.1.nupkg.sha512",
     "/Users/wpacocha/.nuget/packages/npgsql/8.0.6/npgsql.8.0.6.nupkg.sha512",
     "/Users/wpacocha/.nuget/packages/npgsql.entityframeworkcore.postgresql/8.0.11/npgsql.entityframeworkcore.postgresql.8.0.11.nupkg.sha512",
-    "/Users/wpacocha/.nuget/packages/system.identitymodel.tokens.jwt/8.2.1/system.identitymodel.tokens.jwt.8.2.1.nupkg.sha512"
+    "/Users/wpacocha/.nuget/packages/system.identitymodel.tokens.jwt/8.2.1/system.identitymodel.tokens.jwt.8.2.1.nupkg.sha512",
+    "/Users/wpacocha/.nuget/packages/system.text.encodings.web/8.0.0/system.text.encodings.web.8.0.0.nupkg.sha512",
+    "/Users/wpacocha/.nuget/packages/system.text.json/8.0.0/system.text.json.8.0.0.nupkg.sha512"
   ],
   "logs": []
 }

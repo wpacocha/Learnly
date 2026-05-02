@@ -1,11 +1,39 @@
 {
   "Version": 1,
-  "Hash": "g4tozgVne8Akm+US7BfGl+G6p5er0rxYhqdA3YyGrnA=",
+  "Hash": "44yW0uBtK7zic/PwplMZfbeXUc+NONhL80CvDC/lpMY=",
   "Source": "Learnly.Api",
   "BasePath": "_content/Learnly.Api",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
+  "DiscoveryPatterns": [
+    {
+      "Name": "Learnly.Api/wwwroot",
+      "Source": "Learnly.Api",
+      "ContentRoot": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Api/wwwroot/",
+      "BasePath": "_content/Learnly.Api",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Api/wwwroot/uploads/tutor-photos/.gitkeep",
+      "SourceId": "Learnly.Api",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Api/wwwroot/",
+      "BasePath": "_content/Learnly.Api",
+      "RelativePath": "uploads/tutor-photos/.gitkeep",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/uploads/tutor-photos/.gitkeep"
+    }
+  ]
 }

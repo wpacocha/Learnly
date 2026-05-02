@@ -1,3 +1,5 @@
+using Learnly.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -5,6 +7,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Learnly.Infrastructure.Persistence.Migrations;
 
 /// <inheritdoc />
+[DbContext(typeof(LearnlyDbContext))]
+[Migration("20260426093000_UpdateTutorProfileFields")]
 public partial class UpdateTutorProfileFields : Migration
 {
     /// <inheritdoc />

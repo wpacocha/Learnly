@@ -20,6 +20,11 @@ public sealed class TutorAvailabilitySlotConfiguration : IEntityTypeConfiguratio
             .HasForeignKey(e => e.TutorProfileId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasOne<TutorTeachingOffering>()
+            .WithMany()
+            .HasForeignKey(e => e.TutorTeachingOfferingId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasIndex(e => new { e.TutorProfileId, e.StartUtc, e.EndUtc });
     }
 }

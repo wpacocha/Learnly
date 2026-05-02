@@ -5,13 +5,24 @@ using Learnly.Application.Auth;
 using Learnly.Infrastructure;
 using Learnly.Api.Hubs;
 using Learnly.Infrastructure.Identity;
+using Learnly.Infrastructure.Persistence;
+using Learnly.Infrastructure.Persistence.Seeding;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 6 * 1024 * 1024;
+});
+
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -121,14 +132,63 @@ var app = builder.Build();
 
 await IdentitySeeder.SeedRolesAsync(app.Services);
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<LearnlyDbContext>();
+    var startupLogger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+
+    if (app.Environment.IsDevelopment())
+    {
+        try
+        {
+            await db.Database.MigrateAsync();
+        }
+        catch (Exception ex)
+        {
+            startupLogger.LogCritical(
+                ex,
+                "Migracja bazy nie powiodła się. Wykonaj: dotnet ef database update --project src/Learnly.Infrastructure --startup-project src/Learnly.Api");
+            throw;
+        }
+    }
+
+    try
+    {
+        await CatalogSeedData.EnsureSubjectsAndLevelsAsync(db);
+    }
+    catch (Exception ex)
+    {
+        startupLogger.LogError(ex, "Seed katalogu (przedmioty/poziomy) nie powiódł się.");
+    }
+
+    var seedDemo = app.Configuration.GetValue("Seed:DemoAccounts", false);
+    if (app.Environment.IsDevelopment() && seedDemo)
+    {
+        try
+        {
+            await DemoAccountsSeedData.EnsureDemoAccountsAsync(scope.ServiceProvider);
+        }
+        catch (Exception ex)
+        {
+            startupLogger.LogError(ex, "Seed kont demo nie powiódł się.");
+        }
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// CORS musi być przed przekierowaniem na HTTPS — inaczej OPTIONS (preflight) dostaje 307/302
+// i przeglądarka zgłasza „Redirect is not allowed for a preflight request”.
 app.UseCors("ReactClient");
+app.UseStaticFiles();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
