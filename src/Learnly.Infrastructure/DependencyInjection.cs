@@ -1,9 +1,15 @@
 using Learnly.Application.Abstractions;
 using Learnly.Application.Auth;
+using Learnly.Application.Lessons;
+using Learnly.Application.Reviews;
+using Learnly.Application.SqlV2;
 using Learnly.Application.Tutors;
 using Learnly.Infrastructure.Identity;
+using Learnly.Infrastructure.Lessons;
 using Learnly.Infrastructure.Tutors;
 using Learnly.Infrastructure.Persistence;
+using Learnly.Infrastructure.Reviews;
+using Learnly.Infrastructure.SqlV2;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -48,6 +54,17 @@ public static class DependencyInjection
 
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<ITutorProfileService, TutorProfileService>();
+        services.AddScoped<ITutorAssignmentsService, TutorAssignmentsService>();
+        services.AddScoped<ITutorAvailabilityService, TutorAvailabilityService>();
+        services.AddScoped<ITutorSearchService, TutorSearchService>();
+        services.AddScoped<ITutorCatalogService, TutorCatalogService>();
+        services.AddScoped<ILessonService, LessonService>();
+        services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<ISqlV2CatalogService, SqlV2CatalogService>();
+        services.AddScoped<ISqlV2UserService, SqlV2UserService>();
+        services.AddScoped<ISqlV2TutorOfferService, SqlV2TutorOfferService>();
+        services.AddScoped<ISqlV2TutorAvailabilityService, SqlV2TutorAvailabilityService>();
+        services.AddScoped<ISqlV2LessonFlowService, SqlV2LessonFlowService>();
 
         return services;
     }

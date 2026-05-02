@@ -42,12 +42,7 @@ public sealed class TutorProfileController : ControllerBase
         var (profile, error) = await _tutorProfileService.CreateAsync(dto, cancellationToken);
         if (error is not null)
         {
-            if (error.Contains("already exists", StringComparison.OrdinalIgnoreCase))
-            {
-                return Conflict(new { message = error });
-            }
-
-            return BadRequest(new { message = error });
+            return Conflict(new { message = error });
         }
 
         return Created("/api/tutor-profile", profile);
@@ -69,12 +64,7 @@ public sealed class TutorProfileController : ControllerBase
         var (profile, error) = await _tutorProfileService.UpdateAsync(dto, cancellationToken);
         if (error is not null)
         {
-            if (error.Contains("No tutor profile exists", StringComparison.OrdinalIgnoreCase))
-            {
-                return NotFound(new { message = error });
-            }
-
-            return BadRequest(new { message = error });
+            return NotFound(new { message = error });
         }
 
         return Ok(profile);

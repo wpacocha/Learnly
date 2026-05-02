@@ -3,10 +3,9 @@ using System.Text;
 using Learnly.Application;
 using Learnly.Application.Auth;
 using Learnly.Infrastructure;
+using Learnly.Api.Hubs;
 using Learnly.Infrastructure.Identity;
-using Learnly.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -79,6 +78,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             RoleClaimType = ClaimTypes.Role,
             NameClaimType = ClaimTypes.NameIdentifier
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken)
+                    && (path.StartsWithSegments("/hubs/lesson-chat") || path.StartsWithSegments("/hubs/whiteboard")))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -104,12 +119,6 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<LearnlyDbContext>();
-    await dbContext.Database.MigrateAsync();
-}
-
 await IdentitySeeder.SeedRolesAsync(app.Services);
 
 if (app.Environment.IsDevelopment())
@@ -118,15 +127,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// In local development backend often runs on HTTP only.
-// Redirecting preflight OPTIONS to HTTPS causes CORS failures in browser.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+app.UseHttpsRedirection();
 app.UseCors("ReactClient");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<LessonChatHub>("/hubs/lesson-chat");
+app.MapHub<WhiteboardHub>("/hubs/whiteboard");
 
 app.Run();

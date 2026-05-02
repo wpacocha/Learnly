@@ -69,17 +69,18 @@ partial class LearnlyDbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("Learnly.Domain.Entities.TutorProfile", b =>
         {
-            b.Property<DateTimeOffset>("CreatedAtUtc")
-                .HasColumnType("timestamp with time zone");
-
-            b.Property<string>("Description")
+            b.Property<string>("Bio")
+                .IsRequired()
                 .HasMaxLength(4000)
                 .HasColumnType("character varying(4000)");
 
-            b.Property<string>("FirstName")
+            b.Property<DateTimeOffset>("CreatedAtUtc")
+                .HasColumnType("timestamp with time zone");
+
+            b.Property<string>("Headline")
                 .IsRequired()
-                .HasMaxLength(100)
-                .HasColumnType("character varying(100)");
+                .HasMaxLength(200)
+                .HasColumnType("character varying(200)");
 
             b.Property<decimal>("HourlyRate")
                 .HasPrecision(10, 2)
@@ -87,11 +88,6 @@ partial class LearnlyDbContextModelSnapshot : ModelSnapshot
 
             b.Property<Guid>("Id")
                 .HasColumnType("uuid");
-
-            b.Property<string>("LastName")
-                .IsRequired()
-                .HasMaxLength(100)
-                .HasColumnType("character varying(100)");
 
             b.Property<string>("Location")
                 .IsRequired()
@@ -101,16 +97,6 @@ partial class LearnlyDbContextModelSnapshot : ModelSnapshot
             b.Property<string>("PhotoUrl")
                 .HasMaxLength(2000)
                 .HasColumnType("character varying(2000)");
-
-            b.Property<string>("Subject")
-                .IsRequired()
-                .HasMaxLength(200)
-                .HasColumnType("character varying(200)");
-
-            b.Property<string>("TeachingLevel")
-                .IsRequired()
-                .HasMaxLength(200)
-                .HasColumnType("character varying(200)");
 
             b.Property<DateTimeOffset>("UpdatedAtUtc")
                 .HasColumnType("timestamp with time zone");
@@ -130,6 +116,87 @@ partial class LearnlyDbContextModelSnapshot : ModelSnapshot
             b.HasOne("Learnly.Infrastructure.Identity.ApplicationUser", null)
                 .WithMany()
                 .HasForeignKey("UserId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity("Learnly.Domain.Entities.TutorAvailabilitySlot", b =>
+        {
+            b.Property<Guid>("Id")
+                .HasColumnType("uuid");
+
+            b.Property<DateTimeOffset>("EndUtc")
+                .HasColumnType("timestamp with time zone");
+
+            b.Property<DateTimeOffset>("StartUtc")
+                .HasColumnType("timestamp with time zone");
+
+            b.Property<Guid>("TutorProfileId")
+                .HasColumnType("uuid");
+
+            b.HasKey("Id");
+
+            b.HasIndex("TutorProfileId", "StartUtc", "EndUtc");
+
+            b.ToTable("tutor_availability_slots", (string)null);
+
+            b.HasOne("Learnly.Domain.Entities.TutorProfile", null)
+                .WithMany()
+                .HasForeignKey("TutorProfileId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity("Learnly.Domain.Entities.TutorSubject", b =>
+        {
+            b.Property<Guid>("TutorProfileId")
+                .HasColumnType("uuid");
+
+            b.Property<int>("SubjectId")
+                .HasColumnType("integer");
+
+            b.HasKey("TutorProfileId", "SubjectId");
+
+            b.HasIndex("SubjectId");
+
+            b.ToTable("tutor_subjects", (string)null);
+
+            b.HasOne("Learnly.Domain.Entities.Subject", null)
+                .WithMany()
+                .HasForeignKey("SubjectId")
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+
+            b.HasOne("Learnly.Domain.Entities.TutorProfile", null)
+                .WithMany()
+                .HasForeignKey("TutorProfileId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity("Learnly.Domain.Entities.TutorTeachingLevel", b =>
+        {
+            b.Property<Guid>("TutorProfileId")
+                .HasColumnType("uuid");
+
+            b.Property<int>("TeachingLevelId")
+                .HasColumnType("integer");
+
+            b.HasKey("TutorProfileId", "TeachingLevelId");
+
+            b.HasIndex("TeachingLevelId");
+
+            b.ToTable("tutor_teaching_levels", (string)null);
+
+            b.HasOne("Learnly.Domain.Entities.TeachingLevel", null)
+                .WithMany()
+                .HasForeignKey("TeachingLevelId")
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired();
+
+            b.HasOne("Learnly.Domain.Entities.TutorProfile", null)
+                .WithMany()
+                .HasForeignKey("TutorProfileId")
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
         });

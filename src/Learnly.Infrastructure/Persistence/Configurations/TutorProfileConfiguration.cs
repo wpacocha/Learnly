@@ -20,28 +20,17 @@ public sealed class TutorProfileConfiguration : IEntityTypeConfiguration<TutorPr
         builder.HasIndex(e => e.UserId)
             .IsUnique();
 
-        builder.Property(e => e.FirstName)
-            .IsRequired()
-            .HasMaxLength(100);
-
-        builder.Property(e => e.LastName)
-            .IsRequired()
-            .HasMaxLength(100);
-
-        builder.Property(e => e.Subject)
+        builder.Property(e => e.Headline)
             .IsRequired()
             .HasMaxLength(200);
 
-        builder.Property(e => e.TeachingLevel)
+        builder.Property(e => e.Bio)
             .IsRequired()
-            .HasMaxLength(200);
+            .HasMaxLength(4000);
 
         builder.Property(e => e.Location)
             .IsRequired()
             .HasMaxLength(300);
-
-        builder.Property(e => e.Description)
-            .HasMaxLength(4000);
 
         builder.Property(e => e.HourlyRate)
             .HasPrecision(10, 2);
