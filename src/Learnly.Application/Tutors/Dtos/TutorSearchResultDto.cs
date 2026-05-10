@@ -6,6 +6,8 @@ public sealed record TutorSearchResultDto(
     string LastName,
     decimal MinHourlyRate,
     decimal MaxHourlyRate,
+    double? AverageRating,
+    int ReviewCount,
     string? PhotoUrl,
     IReadOnlyList<int> SubjectIds,
     IReadOnlyList<int> TeachingLevelIds,

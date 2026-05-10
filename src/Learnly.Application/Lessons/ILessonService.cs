@@ -9,6 +9,10 @@ public interface ILessonService
 
     Task<IReadOnlyList<LessonDto>> GetMineAsync(CancellationToken cancellationToken = default);
 
+    Task<(LessonRoomStateDto? state, string? error)> GetRoomStateAsync(
+        Guid lessonId,
+        CancellationToken cancellationToken = default);
+
     Task<(LessonDto? lesson, string? error)> ChangeStatusAsync(
         Guid lessonId,
         LessonStatus status,

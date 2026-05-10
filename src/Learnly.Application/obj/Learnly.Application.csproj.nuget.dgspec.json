@@ -1,33 +1,40 @@
 {
   "format": 1,
   "restore": {
-    "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/Learnly.Application.csproj": {}
+    "C:\\Users\\jk123\\Desktop\\pliki_studia\\magister\\Learnly\\Learnly\\src\\Learnly.Application\\Learnly.Application.csproj": {}
   },
   "projects": {
-    "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/Learnly.Application.csproj": {
+    "C:\\Users\\jk123\\Desktop\\pliki_studia\\magister\\Learnly\\Learnly\\src\\Learnly.Application\\Learnly.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/Learnly.Application.csproj",
+        "projectUniqueName": "C:\\Users\\jk123\\Desktop\\pliki_studia\\magister\\Learnly\\Learnly\\src\\Learnly.Application\\Learnly.Application.csproj",
         "projectName": "Learnly.Application",
-        "projectPath": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/Learnly.Application.csproj",
-        "packagesPath": "/Users/wpacocha/.nuget/packages/",
-        "outputPath": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Application/obj/",
+        "projectPath": "C:\\Users\\jk123\\Desktop\\pliki_studia\\magister\\Learnly\\Learnly\\src\\Learnly.Application\\Learnly.Application.csproj",
+        "packagesPath": "C:\\Users\\jk123\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\jk123\\Desktop\\pliki_studia\\magister\\Learnly\\Learnly\\src\\Learnly.Application\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/Users/wpacocha/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\jk123\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Domain/Learnly.Domain.csproj": {
-                "projectPath": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Domain/Learnly.Domain.csproj"
+              "C:\\Users\\jk123\\Desktop\\pliki_studia\\magister\\Learnly\\Learnly\\src\\Learnly.Domain\\Learnly.Domain.csproj": {
+                "projectPath": "C:\\Users\\jk123\\Desktop\\pliki_studia\\magister\\Learnly\\Learnly\\src\\Learnly.Domain\\Learnly.Domain.csproj"
               }
             }
           }
@@ -41,7 +48,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -68,26 +76,33 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.407/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Domain/Learnly.Domain.csproj": {
+    "C:\\Users\\jk123\\Desktop\\pliki_studia\\magister\\Learnly\\Learnly\\src\\Learnly.Domain\\Learnly.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Domain/Learnly.Domain.csproj",
+        "projectUniqueName": "C:\\Users\\jk123\\Desktop\\pliki_studia\\magister\\Learnly\\Learnly\\src\\Learnly.Domain\\Learnly.Domain.csproj",
         "projectName": "Learnly.Domain",
-        "projectPath": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Domain/Learnly.Domain.csproj",
-        "packagesPath": "/Users/wpacocha/.nuget/packages/",
-        "outputPath": "/Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Domain/obj/",
+        "projectPath": "C:\\Users\\jk123\\Desktop\\pliki_studia\\magister\\Learnly\\Learnly\\src\\Learnly.Domain\\Learnly.Domain.csproj",
+        "packagesPath": "C:\\Users\\jk123\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\jk123\\Desktop\\pliki_studia\\magister\\Learnly\\Learnly\\src\\Learnly.Domain\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/Users/wpacocha/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\jk123\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -105,7 +120,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -126,7 +142,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.407/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

@@ -76,6 +76,23 @@ public sealed class TutorSearchService : ITutorSearchService
             return Array.Empty<TutorSearchResultDto>();
         }
 
+        if (query.MinRating.HasValue)
+        {
+            var minRating = query.MinRating.Value;
+            matchingTutorIds = await _db.Reviews
+                .AsNoTracking()
+                .Where(x => matchingTutorIds.Contains(x.TutorProfileId))
+                .GroupBy(x => x.TutorProfileId)
+                .Where(g => g.Average(x => x.Rating) >= minRating)
+                .Select(g => g.Key)
+                .ToListAsync(cancellationToken);
+
+            if (matchingTutorIds.Count == 0)
+            {
+                return Array.Empty<TutorSearchResultDto>();
+            }
+        }
+
         var profiles = await _db.TutorProfiles
             .AsNoTracking()
             .Where(p => matchingTutorIds.Contains(p.Id))
@@ -90,6 +107,18 @@ public sealed class TutorSearchService : ITutorSearchService
         }
 
         var profileIds = profiles.Select(p => p.Id).ToArray();
+
+        var ratingStats = await _db.Reviews
+            .AsNoTracking()
+            .Where(x => profileIds.Contains(x.TutorProfileId))
+            .GroupBy(x => x.TutorProfileId)
+            .Select(g => new
+            {
+                TutorProfileId = g.Key,
+                AverageRating = g.Average(x => x.Rating),
+                ReviewCount = g.Count()
+            })
+            .ToDictionaryAsync(x => x.TutorProfileId, cancellationToken);
 
         var allOfferings = await _db.TutorTeachingOfferings
             .AsNoTracking()
@@ -157,12 +186,16 @@ public sealed class TutorSearchService : ITutorSearchService
                     s.EndUtc))
                 .ToList();
 
+            ratingStats.TryGetValue(profile.Id, out var stats);
+
             result.Add(new TutorSearchResultDto(
                 profile.Id,
                 profile.FirstName,
                 profile.LastName,
                 minRate,
                 maxRate,
+                stats?.AverageRating,
+                stats?.ReviewCount ?? 0,
                 profile.PhotoUrl,
                 subjectIds,
                 levelIds,

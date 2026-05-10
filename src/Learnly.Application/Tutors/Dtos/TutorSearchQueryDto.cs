@@ -8,6 +8,7 @@ public sealed class TutorSearchQueryDto
     public int? TeachingLevelId { get; set; }
     public TeachingMode? TeachingMode { get; set; }
     public string? Location { get; set; }
+    public double? MinRating { get; set; }
     public DateTimeOffset? AvailableFromUtc { get; set; }
     public DateTimeOffset? AvailableToUtc { get; set; }
 }

@@ -286,6 +286,11 @@ h3 {
   max-width: 270px;
 }
 
+.search-field--rating {
+  flex: 1 1 150px;
+  max-width: 190px;
+}
+
 .search-field__label {
   font-size: 0.6875rem;
   font-weight: 700;
@@ -676,6 +681,10 @@ h3 {
   background: var(--color-accent-muted);
   padding: 6px 12px;
   border-radius: var(--radius-full);
+}
+
+.tutor-card__rating {
+  margin-top: -4px;
 }
 
 .tutor-card__meta {

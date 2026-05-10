@@ -46,6 +46,20 @@ public sealed class LessonsController : ControllerBase
         return Ok(await _lessonService.GetMineAsync(cancellationToken));
     }
 
+    [HttpGet("{lessonId:guid}/room-state")]
+    [ProducesResponseType(typeof(LessonRoomStateDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<LessonRoomStateDto>> RoomState(Guid lessonId, CancellationToken cancellationToken)
+    {
+        var (state, error) = await _lessonService.GetRoomStateAsync(lessonId, cancellationToken);
+        if (error is not null)
+        {
+            return NotFound(new { message = error });
+        }
+
+        return Ok(state);
+    }
+
     [HttpPatch("{lessonId:guid}/status")]
     [ProducesResponseType(typeof(LessonDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

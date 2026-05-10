@@ -101,6 +101,46 @@ public sealed class LessonService : ILessonService
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<(LessonRoomStateDto? state, string? error)> GetRoomStateAsync(
+        Guid lessonId,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUser.UserId;
+        if (userId is null)
+        {
+            return (null, "User is not authenticated.");
+        }
+
+        if (!await HasLessonAccessAsync(lessonId, userId, cancellationToken))
+        {
+            return (null, "Lesson not found or access denied.");
+        }
+
+        var messages = await _db.LessonMessages
+            .AsNoTracking()
+            .Where(x => x.LessonId == lessonId)
+            .OrderBy(x => x.SentAtUtc)
+            .ThenBy(x => x.Id)
+            .Select(x => new LessonMessageDto(x.Id, x.LessonId, x.SenderUserId, x.Message, x.SentAtUtc))
+            .ToListAsync(cancellationToken);
+
+        var whiteboardEvents = await _db.WhiteboardEvents
+            .AsNoTracking()
+            .Where(x => x.LessonId == lessonId)
+            .OrderBy(x => x.CreatedAtUtc)
+            .ThenBy(x => x.Id)
+            .Select(x => new WhiteboardEventDto(
+                x.Id,
+                x.LessonId,
+                x.SenderUserId,
+                x.EventType,
+                x.PayloadJson,
+                x.CreatedAtUtc))
+            .ToListAsync(cancellationToken);
+
+        return (new LessonRoomStateDto(messages, whiteboardEvents), null);
+    }
+
     public async Task<(LessonDto? lesson, string? error)> ChangeStatusAsync(
         Guid lessonId,
         LessonStatus status,
@@ -129,6 +169,17 @@ public sealed class LessonService : ILessonService
         lesson.Status = status;
         await _db.SaveChangesAsync(cancellationToken);
         return (Map(lesson), null);
+    }
+
+    private async Task<bool> HasLessonAccessAsync(
+        Guid lessonId,
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        return await _db.Lessons.AnyAsync(x => x.Id == lessonId && x.StudentUserId == userId, cancellationToken)
+            || await _db.Lessons
+                .Join(_db.TutorProfiles, l => l.TutorProfileId, t => t.Id, (l, t) => new { l, t })
+                .AnyAsync(x => x.l.Id == lessonId && x.t.UserId == userId, cancellationToken);
     }
 
     private static LessonDto Map(Lesson x) =>

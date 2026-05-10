@@ -10,3 +10,15 @@
 /Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Domain/obj/Debug/net8.0/refint/Learnly.Domain.dll
 /Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Domain/obj/Debug/net8.0/Learnly.Domain.pdb
 /Users/wpacocha/Studia/kluwak/Learnly/src/Learnly.Domain/obj/Debug/net8.0/ref/Learnly.Domain.dll
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\bin\Debug\net8.0\Learnly.Domain.deps.json
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\bin\Debug\net8.0\Learnly.Domain.dll
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\bin\Debug\net8.0\Learnly.Domain.pdb
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\obj\Debug\net8.0\Learnly.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\obj\Debug\net8.0\Learnly.Domain.AssemblyInfoInputs.cache
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\obj\Debug\net8.0\Learnly.Domain.AssemblyInfo.cs
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\obj\Debug\net8.0\Learnly.Domain.csproj.CoreCompileInputs.cache
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\obj\Debug\net8.0\Learnly.Domain.sourcelink.json
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\obj\Debug\net8.0\Learnly.Domain.dll
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\obj\Debug\net8.0\refint\Learnly.Domain.dll
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\obj\Debug\net8.0\Learnly.Domain.pdb
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Domain\obj\Debug\net8.0\ref\Learnly.Domain.dll

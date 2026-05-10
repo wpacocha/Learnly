@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { fetchLessonRoomState } from '../api/lessonsApi'
 import { createLessonChatConnection, createWhiteboardConnection } from '../realtime/hubs'
 import { useAuth } from '../context/AuthContext'
 
@@ -11,6 +12,7 @@ const LessonRoomPage = () => {
   const boardRef = useRef(null)
   const drawingRef = useRef(false)
   const lastPointRef = useRef(null)
+  const boardEventsRef = useRef([])
 
   const [messages, setMessages] = useState([])
   const [draft, setDraft] = useState('')
@@ -43,16 +45,6 @@ const LessonRoomPage = () => {
       return undefined
     }
     const ctx = canvas.getContext('2d')
-    const resize = () => {
-      const parent = canvas.parentElement
-      const w = parent?.clientWidth ?? 800
-      canvas.width = w
-      canvas.height = 420
-      clearCanvasLocal()
-    }
-    resize()
-    window.addEventListener('resize', resize)
-
     const drawStroke = (p) => {
       if (!ctx) {
         return
@@ -66,6 +58,34 @@ const LessonRoomPage = () => {
       ctx.stroke()
     }
 
+    const applyBoardEvent = (evt) => {
+      if (evt.eventType === 'stroke') {
+        try {
+          const p = JSON.parse(evt.payloadJson)
+          drawStroke(p)
+        } catch {
+          /* ignore malformed payload */
+        }
+      } else if (evt.eventType === 'clear') {
+        clearCanvasLocal()
+      }
+    }
+
+    const replayBoardEvents = () => {
+      clearCanvasLocal()
+      boardEventsRef.current.forEach(applyBoardEvent)
+    }
+
+    const resize = () => {
+      const parent = canvas.parentElement
+      const w = parent?.clientWidth ?? 800
+      canvas.width = w
+      canvas.height = 420
+      replayBoardEvents()
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
     const chat = createLessonChatConnection()
     const board = createWhiteboardConnection()
     chatRef.current = chat
@@ -73,26 +93,25 @@ const LessonRoomPage = () => {
 
     const start = async () => {
       try {
+        const state = await fetchLessonRoomState(lessonId)
+        const initialMessages = Array.isArray(state?.messages) ? state.messages : []
+        const initialBoardEvents = Array.isArray(state?.whiteboardEvents) ? state.whiteboardEvents : []
+        setMessages(initialMessages)
+        boardEventsRef.current = initialBoardEvents
+        replayBoardEvents()
+
         await chat.start()
-        await chat.invoke('JoinLessonGroup', lessonId)
         chat.on('ReceiveMessage', (payload) => {
           setMessages((prev) => [...prev, payload])
         })
+        await chat.invoke('JoinLessonGroup', lessonId)
 
         await board.start()
-        await board.invoke('JoinLessonGroup', lessonId)
         board.on('ReceiveEvent', (evt) => {
-          if (evt.eventType === 'stroke') {
-            try {
-              const p = JSON.parse(evt.payloadJson)
-              drawStroke(p)
-            } catch {
-              /* ignore malformed payload */
-            }
-          } else if (evt.eventType === 'clear') {
-            clearCanvasLocal()
-          }
+          boardEventsRef.current = [...boardEventsRef.current, evt]
+          applyBoardEvent(evt)
         })
+        await board.invoke('JoinLessonGroup', lessonId)
 
         setHubStatus('Połączono — czat i tablica aktywne')
       } catch {

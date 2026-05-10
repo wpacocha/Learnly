@@ -14,6 +14,7 @@ const emptyFilters = {
   availableFrom: '',
   rateMin: 0,
   rateMax: RATE_SLIDER_MAX,
+  minRating: '',
 }
 
 const teachingModeLabel = (m) => {
@@ -27,6 +28,9 @@ const formatSubjectNames = (ids, byId) =>
 
 const formatPln = (value) =>
   Number(value).toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+
+const formatRating = (value) =>
+  Number(value).toLocaleString('pl-PL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
 const formatWynikCount = (n) => {
   if (n === 1) return '1 wynik'
@@ -54,6 +58,9 @@ const buildSearchParams = (f) => {
   }
   if (f.availableFrom) {
     params.availableFromUtc = new Date(f.availableFrom).toISOString()
+  }
+  if (f.minRating) {
+    params.minRating = Number(f.minRating)
   }
   return params
 }
@@ -262,6 +269,17 @@ const SearchPage = () => {
             />
           </label>
 
+          <label className="search-field search-field--rating" htmlFor="minRating">
+            <span className="search-field__label">Ocena tutora</span>
+            <select id="minRating" name="minRating" value={filters.minRating} onChange={handleFilterChange}>
+              <option value="">Dowolna</option>
+              <option value="5">5,0</option>
+              <option value="4.5">od 4,5</option>
+              <option value="4">od 4,0</option>
+              <option value="3">od 3,0</option>
+            </select>
+          </label>
+
           <div className="search-toolbar__rate">
             <div className="rate-range" role="group" aria-label="Zakres stawki godzinowej">
               <div className="rate-range-header">
@@ -329,6 +347,13 @@ const SearchPage = () => {
                   : `${formatPln(tutor.hourlyRate)} PLN/h`}
               </span>
             </div>
+            <span className="rating-badge tutor-card__rating" aria-label="Ocena tutora">
+              {tutor.averageRating == null
+                ? 'Brak ocen'
+                : `★ ${formatRating(tutor.averageRating)} · ${tutor.reviewCount} ${
+                    tutor.reviewCount === 1 ? 'opinia' : 'opinii'
+                  }`}
+            </span>
             {Array.isArray(tutor.offerings) && tutor.offerings.length > 0 && (
               <ul className="tutor-card__offerings muted" style={{ margin: '0 0 8px', paddingLeft: '1.1rem' }}>
                 {tutor.offerings.map((o, idx) => (

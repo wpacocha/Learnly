@@ -5,6 +5,11 @@ export const fetchMyLessons = async () => {
   return data
 }
 
+export const fetchLessonRoomState = async (lessonId) => {
+  const { data } = await apiClient.get(`/api/lessons/${lessonId}/room-state`)
+  return data
+}
+
 export const bookLesson = async (tutorAvailabilitySlotId) => {
   const { data } = await apiClient.post('/api/lessons/book', { tutorAvailabilitySlotId })
   return data
