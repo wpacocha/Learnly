@@ -5,6 +5,6 @@ public sealed record ReviewDto(
     Guid LessonId,
     Guid TutorProfileId,
     string StudentUserId,
-    int Rating,
+    double Rating,
     string? Comment,
     DateTimeOffset CreatedAtUtc);

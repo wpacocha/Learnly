@@ -46,6 +46,11 @@ public sealed class ReviewService : IReviewService
             return (null, "Review can be added only for completed lessons.");
         }
 
+        if (dto.Rating < 1 || dto.Rating > 5 || Math.Abs(dto.Rating * 2 - Math.Round(dto.Rating * 2)) > 0.001)
+        {
+            return (null, "Rating must be between 1 and 5 in 0.5 increments.");
+        }
+
         var exists = await _db.Reviews.AnyAsync(x => x.LessonId == dto.LessonId, cancellationToken);
         if (exists)
         {

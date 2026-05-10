@@ -10,4 +10,5 @@ public sealed record LessonDto(
     DateTimeOffset StartUtc,
     DateTimeOffset EndUtc,
     LessonStatus Status,
-    DateTimeOffset CreatedAtUtc);
+    DateTimeOffset CreatedAtUtc,
+    bool HasReview);

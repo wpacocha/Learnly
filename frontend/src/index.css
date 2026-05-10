@@ -1134,6 +1134,95 @@ h3 {
   margin-top: 18px;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(15 23 42 / 48%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.modal-card {
+  width: min(560px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+}
+
+.review-modal .form {
+  margin-top: 16px;
+}
+
+.review-modal label[for='rating'],
+.review-modal #rating {
+  display: none;
+}
+
+.star-rating-field {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.star-rating-field legend {
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+}
+
+.star-rating__star {
+  position: relative;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  font-size: 32px;
+  line-height: 34px;
+}
+
+.star-rating__base,
+.star-rating__fill {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  text-align: left;
+  color: #cbd5e1;
+}
+
+.star-rating__fill {
+  color: #f59e0b;
+  white-space: nowrap;
+}
+
+.star-rating__star:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.star-rating-value {
+  font-weight: 700;
+  color: var(--color-accent-text);
+}
+
 .tutor-offerings-list {
   display: flex;
   flex-direction: column;
@@ -1494,23 +1583,6 @@ h3 {
   width: 100%;
   cursor: crosshair;
   touch-action: none;
-}
-
-.whiteboard-canvas--text {
-  cursor: text;
-}
-
-.whiteboard-text-input {
-  position: absolute;
-  min-width: 160px;
-  max-width: min(360px, calc(100% - 24px));
-  height: 34px;
-  border: 1px solid var(--color-accent);
-  border-radius: 8px;
-  padding: 4px 8px;
-  font: 22px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16);
 }
 
 .lesson-voice-wrap {

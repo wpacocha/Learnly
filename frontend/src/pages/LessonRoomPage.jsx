@@ -5,7 +5,6 @@ import { createLessonChatConnection, createWhiteboardConnection } from '../realt
 import { useAuth } from '../context/AuthContext'
 
 const BOARD_COLORS = ['#111827', '#4338ca', '#dc2626', '#16a34a', '#f59e0b']
-const TEXT_FONT_SIZE = 22
 
 const createPdfFromCanvas = (canvas) => {
   const imageData = canvas.toDataURL('image/jpeg', 0.95).split(',')[1]
@@ -54,7 +53,6 @@ const LessonRoomPage = () => {
   const boardEventsRef = useRef([])
   const boardToolRef = useRef('draw')
   const boardColorRef = useRef(BOARD_COLORS[1])
-  const textInputRef = useRef(null)
 
   const [messages, setMessages] = useState([])
   const [draft, setDraft] = useState('')
@@ -64,7 +62,6 @@ const LessonRoomPage = () => {
   const [isVoiceOpen, setIsVoiceOpen] = useState(false)
   const [boardTool, setBoardTool] = useState('draw')
   const [boardColor, setBoardColor] = useState(BOARD_COLORS[1])
-  const [textDraft, setTextDraft] = useState(null)
   const [isBoardExpanded, setIsBoardExpanded] = useState(false)
 
   useEffect(() => {
@@ -74,18 +71,6 @@ const LessonRoomPage = () => {
   useEffect(() => {
     boardColorRef.current = boardColor
   }, [boardColor])
-
-  useEffect(() => {
-    if (!textDraft) {
-      return
-    }
-
-    const frameId = requestAnimationFrame(() => {
-      textInputRef.current?.focus()
-    })
-
-    return () => cancelAnimationFrame(frameId)
-  }, [textDraft])
 
   const voiceRoomUrl = useMemo(
     () => `https://meet.jit.si/learnly-lesson-${String(lessonId || '').replace(/[^a-zA-Z0-9_-]/g, '')}`,
@@ -124,16 +109,6 @@ const LessonRoomPage = () => {
       ctx.stroke()
     }
 
-    const drawText = (p) => {
-      if (!ctx || !p.text) {
-        return
-      }
-      ctx.fillStyle = p.color || '#111827'
-      ctx.font = `${p.fontSize || TEXT_FONT_SIZE}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
-      ctx.textBaseline = 'top'
-      ctx.fillText(p.text, p.x, p.y)
-    }
-
     const applyBoardEvent = (evt) => {
       if (evt.eventType === 'stroke') {
         try {
@@ -144,13 +119,6 @@ const LessonRoomPage = () => {
         }
       } else if (evt.eventType === 'clear') {
         clearCanvasLocal()
-      } else if (evt.eventType === 'text') {
-        try {
-          const p = JSON.parse(evt.payloadJson)
-          drawText(p)
-        } catch {
-          /* ignore malformed payload */
-        }
       }
     }
 
@@ -239,19 +207,6 @@ const LessonRoomPage = () => {
     start()
 
     const pointerDown = (e) => {
-      if (boardToolRef.current === 'text') {
-        const r = canvas.getBoundingClientRect()
-        const x = e.clientX - r.left
-        const y = e.clientY - r.top
-        setTextDraft({
-          value: '',
-          x,
-          y,
-          left: Math.min(x, Math.max(0, r.width - 180)),
-          top: Math.min(y, Math.max(0, r.height - 42)),
-        })
-        return
-      }
       drawingRef.current = true
       const r = canvas.getBoundingClientRect()
       lastPointRef.current = { x: e.clientX - r.left, y: e.clientY - r.top }
@@ -334,7 +289,6 @@ const LessonRoomPage = () => {
 
   const clearBoardForEveryone = async () => {
     setBoardError('')
-    setTextDraft(null)
     clearCanvasLocal()
     try {
       const board = boardRef.current
@@ -348,35 +302,6 @@ const LessonRoomPage = () => {
       })
     } catch {
       setBoardError('Nie udało się zsynchronizować czyszczenia tablicy.')
-    }
-  }
-
-  const commitBoardText = async () => {
-    const current = textDraft
-    const text = current?.value.trim()
-    setTextDraft(null)
-    if (!current || !text) {
-      return
-    }
-    setBoardError('')
-    try {
-      const board = boardRef.current
-      if (!board) {
-        return
-      }
-      await board.invoke('SendEvent', {
-        lessonId,
-        eventType: 'text',
-        payloadJson: JSON.stringify({
-          x: current.x,
-          y: current.y,
-          text,
-          color: boardColor,
-          fontSize: TEXT_FONT_SIZE,
-        }),
-      })
-    } catch {
-      setBoardError('Nie udalo sie dodac tekstu na tablicy.')
     }
   }
 
@@ -395,9 +320,9 @@ const LessonRoomPage = () => {
       document.body.appendChild(link)
       link.click()
       link.remove()
-      URL.revokeObjectURL(url)
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch {
-      setBoardError('Nie udalo sie pobrac tablicy jako PDF.')
+      setBoardError('Nie udało się pobrać tablicy jako PDF.')
     }
   }
 
@@ -465,20 +390,9 @@ const LessonRoomPage = () => {
               <button
                 type="button"
                 className={`btn ${boardTool === 'draw' ? 'primary' : 'secondary'} whiteboard-tool-btn`}
-                onClick={() => {
-                  setTextDraft(null)
-                  setBoardTool('draw')
-                }}
+                onClick={() => setBoardTool('draw')}
               >
                 Rysuj
-              </button>
-              <button
-                type="button"
-                className={`btn ${boardTool === 'text' ? 'primary' : 'secondary'} whiteboard-tool-btn`}
-                onClick={() => setBoardTool('text')}
-                title="Kliknij tablice, aby wpisac tekst"
-              >
-                A
               </button>
             </div>
             <div className="whiteboard-color-group" role="group" aria-label="Kolor">
@@ -518,27 +432,6 @@ const LessonRoomPage = () => {
           )}
           <div className="canvas-wrap">
             <canvas ref={canvasRef} className={`whiteboard-canvas whiteboard-canvas--${boardTool}`} />
-            {textDraft && (
-              <input
-                ref={textInputRef}
-                className="whiteboard-text-input"
-                style={{ left: textDraft.left, top: textDraft.top, color: boardColor }}
-                value={textDraft.value}
-                autoFocus
-                onChange={(e) => setTextDraft((prev) => (prev ? { ...prev, value: e.target.value } : prev))}
-                onBlur={commitBoardText}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    e.currentTarget.blur()
-                  }
-                  if (e.key === 'Escape') {
-                    setTextDraft(null)
-                  }
-                }}
-                placeholder="Tekst"
-              />
-            )}
           </div>
           {isVoiceOpen && (
             <div className="lesson-voice-wrap">

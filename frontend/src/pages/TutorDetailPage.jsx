@@ -30,8 +30,7 @@ const TutorDetailPage = () => {
 
   const seeded = location.state?.tutor
   const seededOk = Boolean(tutorProfileId && seeded?.tutorProfileId === tutorProfileId)
-  const [fetchedTutor, setFetchedTutor] = useState(null)
-  const tutor = seededOk ? seeded : fetchedTutor
+  const [tutor, setTutor] = useState(seededOk ? seeded : null)
   const [reviews, setReviews] = useState([])
   const [subjects, setSubjects] = useState([])
   const [levels, setLevels] = useState([])
@@ -67,7 +66,7 @@ const TutorDetailPage = () => {
   }, [])
 
   useEffect(() => {
-    if (!tutorProfileId || seededOk) {
+    if (!tutorProfileId) {
       return undefined
     }
 
@@ -81,14 +80,14 @@ const TutorDetailPage = () => {
         }
         const found = data.find((t) => t.tutorProfileId === tutorProfileId)
         if (!found) {
-          setFetchedTutor(null)
+          setTutor(null)
           setLoadError('Nie znaleziono tutora. Wróć do wyszukiwania.')
           return
         }
-        setFetchedTutor(found)
+        setTutor(found)
       } catch {
         if (!cancelled) {
-          setFetchedTutor(null)
+          setTutor(null)
           setLoadError('Nie udało się załadować profilu tutora.')
         }
       }
@@ -97,7 +96,7 @@ const TutorDetailPage = () => {
     return () => {
       cancelled = true
     }
-  }, [tutorProfileId, seededOk])
+  }, [tutorProfileId])
 
   useEffect(() => {
     const loadReviews = async () => {
@@ -126,6 +125,14 @@ const TutorDetailPage = () => {
     setBookMessage('')
     try {
       await bookLesson(slotId)
+      setTutor((prev) =>
+        prev
+          ? {
+              ...prev,
+              availableSlots: (prev.availableSlots ?? []).filter((slot) => slot.id !== slotId),
+            }
+          : prev,
+      )
       setBookMessage('Rezerwacja zapisana. Zobacz „Moje lekcje”.')
     } catch (err) {
       const msg = err?.response?.data?.message

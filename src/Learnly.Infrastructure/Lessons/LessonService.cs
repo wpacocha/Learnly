@@ -97,7 +97,7 @@ public sealed class LessonService : ILessonService
             .AsNoTracking()
             .Where(x => x.StudentUserId == userId || tutorProfileIds.Contains(x.TutorProfileId))
             .OrderBy(x => x.StartUtc)
-            .Select(x => Map(x))
+            .Select(x => Map(x, _db.Reviews.Any(r => r.LessonId == x.Id)))
             .ToListAsync(cancellationToken);
     }
 
@@ -168,7 +168,8 @@ public sealed class LessonService : ILessonService
 
         lesson.Status = status;
         await _db.SaveChangesAsync(cancellationToken);
-        return (Map(lesson), null);
+        var hasReview = await _db.Reviews.AnyAsync(x => x.LessonId == lesson.Id, cancellationToken);
+        return (Map(lesson, hasReview), null);
     }
 
     private async Task<bool> HasLessonAccessAsync(
@@ -182,6 +183,15 @@ public sealed class LessonService : ILessonService
                 .AnyAsync(x => x.l.Id == lessonId && x.t.UserId == userId, cancellationToken);
     }
 
-    private static LessonDto Map(Lesson x) =>
-        new(x.Id, x.StudentUserId, x.TutorProfileId, x.TutorAvailabilitySlotId, x.StartUtc, x.EndUtc, x.Status, x.CreatedAtUtc);
+    private static LessonDto Map(Lesson x, bool hasReview = false) =>
+        new(
+            x.Id,
+            x.StudentUserId,
+            x.TutorProfileId,
+            x.TutorAvailabilitySlotId,
+            x.StartUtc,
+            x.EndUtc,
+            x.Status,
+            x.CreatedAtUtc,
+            hasReview);
 }
