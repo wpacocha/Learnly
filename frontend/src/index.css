@@ -1434,10 +1434,52 @@ h3 {
 }
 
 .canvas-wrap {
+  position: relative;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
+}
+
+.lesson-board-panel--expanded {
+  grid-column: 1 / -1;
+}
+
+.whiteboard-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 10px 0 4px;
+}
+
+.whiteboard-tool-group,
+.whiteboard-color-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.whiteboard-tool-btn {
+  min-height: 36px;
+  padding: 8px 14px;
+}
+
+.whiteboard-color {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #e2e8f0;
+  border-radius: 50%;
+  background: var(--board-color);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 2px #ffffff;
+}
+
+.whiteboard-color.is-active {
+  border-color: var(--color-accent);
+  box-shadow:
+    inset 0 0 0 2px #ffffff,
+    0 0 0 3px rgba(79, 70, 229, 0.18);
 }
 
 .lesson-board-actions {
@@ -1452,6 +1494,23 @@ h3 {
   width: 100%;
   cursor: crosshair;
   touch-action: none;
+}
+
+.whiteboard-canvas--text {
+  cursor: text;
+}
+
+.whiteboard-text-input {
+  position: absolute;
+  min-width: 160px;
+  max-width: min(360px, calc(100% - 24px));
+  height: 34px;
+  border: 1px solid var(--color-accent);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font: 22px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16);
 }
 
 .lesson-voice-wrap {

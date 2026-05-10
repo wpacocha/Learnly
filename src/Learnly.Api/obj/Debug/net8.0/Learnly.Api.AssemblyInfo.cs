@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Learnly.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0e446f23e936e412ddab2be246f7c512f50ac312")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ac977f256514ae74afe1bba4ff89d5fffbaaeb7d")]
 [assembly: System.Reflection.AssemblyProductAttribute("Learnly.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Learnly.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

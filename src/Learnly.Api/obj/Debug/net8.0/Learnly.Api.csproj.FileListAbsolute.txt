@@ -262,3 +262,4 @@ C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Api\obj
 C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Api\obj\Debug\net8.0\Learnly.Api.pdb
 C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Api\obj\Debug\net8.0\Learnly.Api.genruntimeconfig.cache
 C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Api\obj\Debug\net8.0\ref\Learnly.Api.dll
+C:\Users\jk123\Desktop\pliki_studia\magister\Learnly\Learnly\src\Learnly.Api\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

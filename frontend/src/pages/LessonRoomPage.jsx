@@ -4,6 +4,45 @@ import { fetchLessonRoomState } from '../api/lessonsApi'
 import { createLessonChatConnection, createWhiteboardConnection } from '../realtime/hubs'
 import { useAuth } from '../context/AuthContext'
 
+const BOARD_COLORS = ['#111827', '#4338ca', '#dc2626', '#16a34a', '#f59e0b']
+const TEXT_FONT_SIZE = 22
+
+const createPdfFromCanvas = (canvas) => {
+  const imageData = canvas.toDataURL('image/jpeg', 0.95).split(',')[1]
+  const imageBytes = atob(imageData)
+  const pageWidth = 842
+  const pageHeight = 595
+  const margin = 32
+  const maxImageWidth = pageWidth - margin * 2
+  const maxImageHeight = pageHeight - margin * 2
+  const scale = Math.min(maxImageWidth / canvas.width, maxImageHeight / canvas.height)
+  const imageWidth = canvas.width * scale
+  const imageHeight = canvas.height * scale
+  const imageX = (pageWidth - imageWidth) / 2
+  const imageY = (pageHeight - imageHeight) / 2
+  const content = `q ${imageWidth.toFixed(2)} 0 0 ${imageHeight.toFixed(2)} ${imageX.toFixed(2)} ${imageY.toFixed(2)} cm /Im0 Do Q`
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`,
+    `<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageBytes.length} >>\nstream\n${imageBytes}\nendstream`,
+    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
+  ]
+  let pdf = '%PDF-1.4\n'
+  const offsets = [0]
+  objects.forEach((object, index) => {
+    offsets.push(pdf.length)
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`
+  })
+  const xrefOffset = pdf.length
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`
+  offsets.slice(1).forEach((offset) => {
+    pdf += `${String(offset).padStart(10, '0')} 00000 n \n`
+  })
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`
+  return new Blob([Uint8Array.from(pdf, (char) => char.charCodeAt(0))], { type: 'application/pdf' })
+}
+
 const LessonRoomPage = () => {
   const { lessonId } = useParams()
   const { user } = useAuth()
@@ -13,6 +52,9 @@ const LessonRoomPage = () => {
   const drawingRef = useRef(false)
   const lastPointRef = useRef(null)
   const boardEventsRef = useRef([])
+  const boardToolRef = useRef('draw')
+  const boardColorRef = useRef(BOARD_COLORS[1])
+  const textInputRef = useRef(null)
 
   const [messages, setMessages] = useState([])
   const [draft, setDraft] = useState('')
@@ -20,6 +62,30 @@ const LessonRoomPage = () => {
   const [sendError, setSendError] = useState('')
   const [boardError, setBoardError] = useState('')
   const [isVoiceOpen, setIsVoiceOpen] = useState(false)
+  const [boardTool, setBoardTool] = useState('draw')
+  const [boardColor, setBoardColor] = useState(BOARD_COLORS[1])
+  const [textDraft, setTextDraft] = useState(null)
+  const [isBoardExpanded, setIsBoardExpanded] = useState(false)
+
+  useEffect(() => {
+    boardToolRef.current = boardTool
+  }, [boardTool])
+
+  useEffect(() => {
+    boardColorRef.current = boardColor
+  }, [boardColor])
+
+  useEffect(() => {
+    if (!textDraft) {
+      return
+    }
+
+    const frameId = requestAnimationFrame(() => {
+      textInputRef.current?.focus()
+    })
+
+    return () => cancelAnimationFrame(frameId)
+  }, [textDraft])
 
   const voiceRoomUrl = useMemo(
     () => `https://meet.jit.si/learnly-lesson-${String(lessonId || '').replace(/[^a-zA-Z0-9_-]/g, '')}`,
@@ -58,6 +124,16 @@ const LessonRoomPage = () => {
       ctx.stroke()
     }
 
+    const drawText = (p) => {
+      if (!ctx || !p.text) {
+        return
+      }
+      ctx.fillStyle = p.color || '#111827'
+      ctx.font = `${p.fontSize || TEXT_FONT_SIZE}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+      ctx.textBaseline = 'top'
+      ctx.fillText(p.text, p.x, p.y)
+    }
+
     const applyBoardEvent = (evt) => {
       if (evt.eventType === 'stroke') {
         try {
@@ -68,6 +144,13 @@ const LessonRoomPage = () => {
         }
       } else if (evt.eventType === 'clear') {
         clearCanvasLocal()
+      } else if (evt.eventType === 'text') {
+        try {
+          const p = JSON.parse(evt.payloadJson)
+          drawText(p)
+        } catch {
+          /* ignore malformed payload */
+        }
       }
     }
 
@@ -85,36 +168,70 @@ const LessonRoomPage = () => {
     }
     resize()
     window.addEventListener('resize', resize)
+    const resizeObserver = new ResizeObserver(resize)
+    if (canvas.parentElement) {
+      resizeObserver.observe(canvas.parentElement)
+    }
 
     const chat = createLessonChatConnection()
     const board = createWhiteboardConnection()
+    let isDisposed = false
     chatRef.current = chat
     boardRef.current = board
+
+    const receiveMessage = (payload) => {
+      setMessages((prev) => (prev.some((m) => m.id === payload.id) ? prev : [...prev, payload]))
+    }
+
+    const receiveBoardEvent = (evt) => {
+      if (boardEventsRef.current.some((e) => e.id === evt.id)) {
+        return
+      }
+      boardEventsRef.current = [...boardEventsRef.current, evt]
+      applyBoardEvent(evt)
+    }
 
     const start = async () => {
       try {
         const state = await fetchLessonRoomState(lessonId)
+        if (isDisposed) {
+          return
+        }
         const initialMessages = Array.isArray(state?.messages) ? state.messages : []
         const initialBoardEvents = Array.isArray(state?.whiteboardEvents) ? state.whiteboardEvents : []
         setMessages(initialMessages)
         boardEventsRef.current = initialBoardEvents
         replayBoardEvents()
 
+        chat.on('ReceiveMessage', receiveMessage)
         await chat.start()
-        chat.on('ReceiveMessage', (payload) => {
-          setMessages((prev) => [...prev, payload])
-        })
+        if (isDisposed) {
+          await chat.stop()
+          return
+        }
         await chat.invoke('JoinLessonGroup', lessonId)
+        if (isDisposed) {
+          await chat.stop()
+          return
+        }
 
+        board.on('ReceiveEvent', receiveBoardEvent)
         await board.start()
-        board.on('ReceiveEvent', (evt) => {
-          boardEventsRef.current = [...boardEventsRef.current, evt]
-          applyBoardEvent(evt)
-        })
+        if (isDisposed) {
+          await board.stop()
+          return
+        }
         await board.invoke('JoinLessonGroup', lessonId)
+        if (isDisposed) {
+          await board.stop()
+          return
+        }
 
         setHubStatus('Połączono — czat i tablica aktywne')
       } catch {
+        if (isDisposed) {
+          return
+        }
         setHubStatus('Nie udało się połączyć (sprawdź token i czy jesteś uczestnikiem lekcji).')
       }
     }
@@ -122,6 +239,19 @@ const LessonRoomPage = () => {
     start()
 
     const pointerDown = (e) => {
+      if (boardToolRef.current === 'text') {
+        const r = canvas.getBoundingClientRect()
+        const x = e.clientX - r.left
+        const y = e.clientY - r.top
+        setTextDraft({
+          value: '',
+          x,
+          y,
+          left: Math.min(x, Math.max(0, r.width - 180)),
+          top: Math.min(y, Math.max(0, r.height - 42)),
+        })
+        return
+      }
       drawingRef.current = true
       const r = canvas.getBoundingClientRect()
       lastPointRef.current = { x: e.clientX - r.left, y: e.clientY - r.top }
@@ -140,7 +270,7 @@ const LessonRoomPage = () => {
         y0: prev.y,
         x1: x,
         y1: y,
-        color: '#4338ca',
+        color: boardColorRef.current,
         lineWidth: 2,
       }
       drawStroke(payload)
@@ -164,14 +294,22 @@ const LessonRoomPage = () => {
     window.addEventListener('mouseup', pointerUp)
 
     return () => {
+      isDisposed = true
       window.removeEventListener('resize', resize)
+      resizeObserver.disconnect()
       canvas.removeEventListener('mousedown', pointerDown)
       canvas.removeEventListener('mousemove', pointerMove)
       window.removeEventListener('mouseup', pointerUp)
+      chat.off('ReceiveMessage', receiveMessage)
+      board.off('ReceiveEvent', receiveBoardEvent)
       chat.stop()
       board.stop()
-      chatRef.current = null
-      boardRef.current = null
+      if (chatRef.current === chat) {
+        chatRef.current = null
+      }
+      if (boardRef.current === board) {
+        boardRef.current = null
+      }
     }
   }, [lessonId])
 
@@ -196,6 +334,7 @@ const LessonRoomPage = () => {
 
   const clearBoardForEveryone = async () => {
     setBoardError('')
+    setTextDraft(null)
     clearCanvasLocal()
     try {
       const board = boardRef.current
@@ -209,6 +348,56 @@ const LessonRoomPage = () => {
       })
     } catch {
       setBoardError('Nie udało się zsynchronizować czyszczenia tablicy.')
+    }
+  }
+
+  const commitBoardText = async () => {
+    const current = textDraft
+    const text = current?.value.trim()
+    setTextDraft(null)
+    if (!current || !text) {
+      return
+    }
+    setBoardError('')
+    try {
+      const board = boardRef.current
+      if (!board) {
+        return
+      }
+      await board.invoke('SendEvent', {
+        lessonId,
+        eventType: 'text',
+        payloadJson: JSON.stringify({
+          x: current.x,
+          y: current.y,
+          text,
+          color: boardColor,
+          fontSize: TEXT_FONT_SIZE,
+        }),
+      })
+    } catch {
+      setBoardError('Nie udalo sie dodac tekstu na tablicy.')
+    }
+  }
+
+  const downloadBoardPdf = () => {
+    setBoardError('')
+    try {
+      const canvas = canvasRef.current
+      if (!canvas) {
+        return
+      }
+      const blob = createPdfFromCanvas(canvas)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `tablica-lekcja-${lessonId}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch {
+      setBoardError('Nie udalo sie pobrac tablicy jako PDF.')
     }
   }
 
@@ -268,12 +457,52 @@ const LessonRoomPage = () => {
           </form>
         </section>
 
-        <section className="card lesson-board-panel">
+        <section className={`card lesson-board-panel${isBoardExpanded ? ' lesson-board-panel--expanded' : ''}`}>
           <h2>Tablica</h2>
           <p className="muted">Rysuj myszą — druga osoba widzi to na żywo.</p>
+          <div className="whiteboard-toolbar" aria-label="Narzedzia tablicy">
+            <div className="whiteboard-tool-group" role="group" aria-label="Tryb tablicy">
+              <button
+                type="button"
+                className={`btn ${boardTool === 'draw' ? 'primary' : 'secondary'} whiteboard-tool-btn`}
+                onClick={() => {
+                  setTextDraft(null)
+                  setBoardTool('draw')
+                }}
+              >
+                Rysuj
+              </button>
+              <button
+                type="button"
+                className={`btn ${boardTool === 'text' ? 'primary' : 'secondary'} whiteboard-tool-btn`}
+                onClick={() => setBoardTool('text')}
+                title="Kliknij tablice, aby wpisac tekst"
+              >
+                A
+              </button>
+            </div>
+            <div className="whiteboard-color-group" role="group" aria-label="Kolor">
+              {BOARD_COLORS.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  className={`whiteboard-color${boardColor === color ? ' is-active' : ''}`}
+                  style={{ '--board-color': color }}
+                  onClick={() => setBoardColor(color)}
+                  aria-label={`Kolor ${color}`}
+                />
+              ))}
+            </div>
+          </div>
           <div className="lesson-board-actions">
             <button type="button" className="btn secondary" onClick={clearBoardForEveryone}>
               Wyczyść tablicę
+            </button>
+            <button type="button" className="btn secondary" onClick={downloadBoardPdf}>
+              Pobierz PDF
+            </button>
+            <button type="button" className="btn secondary" onClick={() => setIsBoardExpanded((v) => !v)}>
+              {isBoardExpanded ? 'Zmniejsz tablice' : 'Otworz tablice'}
             </button>
             <button type="button" className="btn primary" onClick={() => setIsVoiceOpen((v) => !v)}>
               {isVoiceOpen ? 'Ukryj rozmowę głosową' : 'Rozmowa głosowa'}
@@ -288,7 +517,28 @@ const LessonRoomPage = () => {
             </p>
           )}
           <div className="canvas-wrap">
-            <canvas ref={canvasRef} className="whiteboard-canvas" />
+            <canvas ref={canvasRef} className={`whiteboard-canvas whiteboard-canvas--${boardTool}`} />
+            {textDraft && (
+              <input
+                ref={textInputRef}
+                className="whiteboard-text-input"
+                style={{ left: textDraft.left, top: textDraft.top, color: boardColor }}
+                value={textDraft.value}
+                autoFocus
+                onChange={(e) => setTextDraft((prev) => (prev ? { ...prev, value: e.target.value } : prev))}
+                onBlur={commitBoardText}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    e.currentTarget.blur()
+                  }
+                  if (e.key === 'Escape') {
+                    setTextDraft(null)
+                  }
+                }}
+                placeholder="Tekst"
+              />
+            )}
           </div>
           {isVoiceOpen && (
             <div className="lesson-voice-wrap">

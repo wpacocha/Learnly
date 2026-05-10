@@ -128,7 +128,10 @@ public sealed class TutorSearchService : ITutorSearchService
 
         var slotsQuery = _db.TutorAvailabilitySlots
             .AsNoTracking()
-            .Where(x => profileIds.Contains(x.TutorProfileId));
+            .Where(x => profileIds.Contains(x.TutorProfileId))
+            .Where(x => !_db.Lessons.Any(l =>
+                l.TutorAvailabilitySlotId == x.Id
+                && l.Status != LessonStatus.Cancelled));
 
         if (query.AvailableFromUtc.HasValue)
         {
