@@ -173,12 +173,54 @@ h3 {
   font-weight: 600;
 }
 
+.nav-notification-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notification-badge {
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
 .nav-divider {
   width: 1px;
   height: 22px;
   background: var(--color-border);
   margin: 0 4px;
   flex-shrink: 0;
+}
+
+.language-toggle {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-full);
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.language-toggle:hover {
+  border-color: #94a3b8;
+  color: var(--color-text);
+  background: var(--color-surface-subtle);
 }
 
 .btn.nav-logout {
@@ -1356,6 +1398,133 @@ h3 {
   font-size: 0.95rem;
 }
 
+.availability-planner {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.availability-planner__controls,
+.availability-block-form,
+.availability-draft-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.availability-block-form__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.availability-draft-actions {
+  grid-template-columns: 1fr 1fr;
+}
+
+.availability-calendar {
+  display: grid;
+  gap: 12px;
+}
+
+.availability-calendar__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.availability-calendar__toolbar h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  text-transform: capitalize;
+}
+
+.availability-calendar__weekdays,
+.availability-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.availability-calendar__weekdays {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.availability-calendar__empty,
+.availability-day {
+  min-height: 76px;
+}
+
+.availability-day {
+  border: 1px solid #dbe3ef;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  color: #0f172a;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.availability-day small {
+  color: #4f46e5;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.availability-day:hover:not(:disabled),
+.availability-day--selected {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+
+.availability-day:disabled {
+  color: #94a3b8;
+  background: #f8fafc;
+  cursor: not-allowed;
+}
+
+@media (max-width: 680px) {
+  .availability-planner {
+    grid-template-columns: 1fr;
+  }
+
+  .availability-calendar__toolbar h2 {
+    font-size: 1rem;
+  }
+
+  .availability-calendar__weekdays,
+  .availability-calendar__grid {
+    gap: 5px;
+  }
+
+  .availability-calendar__empty,
+  .availability-day {
+    min-height: 58px;
+  }
+
+  .availability-day {
+    padding: 6px;
+    font-size: 0.85rem;
+  }
+
+  .availability-draft-actions,
+  .availability-block-form__row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .levels-chip-fieldset .levels-chip-hint {
   margin: 0 0 6px;
 }
@@ -1432,6 +1601,213 @@ h3 {
   background: #f8fafc;
 }
 
+.conversation-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.conversation-list {
+  display: grid;
+  gap: 8px;
+}
+
+.conversation-list__item {
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.conversation-list__item span,
+.conversation-list__item small {
+  color: #64748b;
+}
+
+.conversation-list__item--active {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+
+.conversation-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.conversation-messages {
+  min-height: 260px;
+  max-height: 520px;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8fafc;
+}
+
+.conversation-message {
+  align-self: flex-start;
+  max-width: 78%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.conversation-message--mine {
+  align-self: flex-end;
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.conversation-message p {
+  margin: 0 0 4px;
+}
+
+.conversation-message__sender {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.82rem;
+}
+
+.conversation-message small {
+  color: #64748b;
+}
+
+.conversation-compose {
+  display: grid;
+  gap: 10px;
+}
+
+.notification-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.notification-row {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  background: #ffffff;
+}
+
+.notification-row--unread {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+
+.booking-calendar-controls {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.booking-calendar-controls label {
+  display: grid;
+  gap: 6px;
+  max-width: 360px;
+  font-weight: 700;
+}
+
+.booking-calendar-week-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.booking-calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.booking-calendar-day {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+  min-height: 180px;
+  background: #ffffff;
+}
+
+.booking-calendar-day h3 {
+  margin: 0 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.95rem;
+}
+
+.booking-calendar-day h3 span {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.booking-slot-buttons {
+  display: grid;
+  gap: 8px;
+}
+
+.booking-slot-button {
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #312e81;
+  padding: 8px;
+  display: grid;
+  gap: 3px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.booking-slot-button:hover:not(:disabled) {
+  border-color: #4f46e5;
+  background: #e0e7ff;
+}
+
+.booking-slot-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.booking-slot-button span {
+  font-size: 0.78rem;
+}
+
+@media (max-width: 760px) {
+  .conversation-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .conversation-message {
+    max-width: 100%;
+  }
+
+  .notification-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .booking-calendar-week {
+    grid-template-columns: 1fr;
+  }
+}
+
 .lessons-list {
   list-style: none;
   padding: 0;
@@ -1488,6 +1864,10 @@ h3 {
   align-items: start;
 }
 
+.lesson-room-grid--chat-only {
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+}
+
 .lesson-room-header {
   margin-bottom: 0;
 }
@@ -1528,6 +1908,36 @@ h3 {
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
+}
+
+.canvas-wrap--standalone {
+  min-height: 520px;
+}
+
+.lesson-whiteboard-page {
+  max-width: 1280px;
+}
+
+.lesson-whiteboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.lesson-whiteboard-header h1 {
+  margin: 0;
+}
+
+.lesson-whiteboard-surface {
+  background: transparent;
+}
+
+.lesson-board-launch {
+  display: grid;
+  gap: 12px;
+  align-content: start;
 }
 
 .lesson-board-panel--expanded {
@@ -1585,6 +1995,10 @@ h3 {
   touch-action: none;
 }
 
+.whiteboard-canvas--eraser {
+  cursor: cell;
+}
+
 .lesson-voice-wrap {
   margin-top: 12px;
   border: 1px solid #e2e8f0;
@@ -1603,6 +2017,11 @@ h3 {
 @media (max-width: 900px) {
   .lesson-room-grid {
     grid-template-columns: 1fr;
+  }
+
+  .lesson-whiteboard-header {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

@@ -1,11 +1,15 @@
 using Learnly.Application.Abstractions;
 using Learnly.Application.Auth;
+using Learnly.Application.Conversations;
 using Learnly.Application.Lessons;
+using Learnly.Application.Notifications;
 using Learnly.Application.Reviews;
 using Learnly.Application.SqlV2;
 using Learnly.Application.Tutors;
 using Learnly.Infrastructure.Identity;
 using Learnly.Infrastructure.Lessons;
+using Learnly.Infrastructure.Conversations;
+using Learnly.Infrastructure.Notifications;
 using Learnly.Infrastructure.Tutors;
 using Learnly.Infrastructure.Persistence;
 using Learnly.Infrastructure.Reviews;
@@ -59,6 +63,8 @@ public static class DependencyInjection
         services.AddScoped<ITutorSearchService, TutorSearchService>();
         services.AddScoped<ITutorCatalogService, TutorCatalogService>();
         services.AddScoped<ILessonService, LessonService>();
+        services.AddScoped<IConversationService, ConversationService>();
+        services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<ISqlV2CatalogService, SqlV2CatalogService>();
         services.AddScoped<ISqlV2UserService, SqlV2UserService>();

@@ -16,6 +16,23 @@ const formatSubjectNames = (ids, byId) =>
 const formatPln = (value) =>
   Number(value).toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 
+const toDateKey = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+const startOfWeek = (date) => {
+  const next = new Date(date)
+  const day = (next.getDay() + 6) % 7
+  next.setHours(0, 0, 0, 0)
+  next.setDate(next.getDate() - day)
+  return next
+}
+
+const addDays = (date, days) => {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
 const teachingModeLabel = (m) => {
   if (m === 0) return 'Online'
   if (m === 1) return 'Stacjonarnie'
@@ -38,6 +55,8 @@ const TutorDetailPage = () => {
   const [bookingSlotId, setBookingSlotId] = useState(null)
   const [bookMessage, setBookMessage] = useState('')
   const [bookError, setBookError] = useState('')
+  const [slotSubjectFilter, setSlotSubjectFilter] = useState('')
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
 
   const isStudent = user?.roles?.includes('Student')
 
@@ -114,6 +133,15 @@ const TutorDetailPage = () => {
   }, [tutorProfileId])
 
   const futureSlots = (tutor?.availableSlots ?? []).filter((s) => new Date(s.startUtc) > new Date())
+  const filteredSlots = futureSlots.filter((slot) =>
+    slotSubjectFilter ? String(slot.subjectId) === String(slotSubjectFilter) : true,
+  )
+  const weekDays = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index))
+  const slotsByDay = new Map()
+  filteredSlots.forEach((slot) => {
+    const key = toDateKey(new Date(slot.startUtc))
+    slotsByDay.set(key, [...(slotsByDay.get(key) ?? []), slot])
+  })
 
   const handleBook = async (slotId) => {
     if (!isStudent) {
@@ -223,6 +251,16 @@ const TutorDetailPage = () => {
                   : `★ ${avgRating} · ${reviews.length} ${reviews.length === 1 ? 'opinia' : 'opinii'}`}
               </div>
             </div>
+            {isStudent && (
+              <button
+                type="button"
+                className="btn secondary"
+                style={{ marginTop: 18 }}
+                onClick={() => navigate('/conversations', { state: { tutorProfileId } })}
+              >
+                Napisz do tutora
+              </button>
+            )}
           </div>
           {tutor.photoUrl ? (
             <img
@@ -250,24 +288,73 @@ const TutorDetailPage = () => {
           <p className="muted">Zaloguj się jako uczeń (Student), aby zarezerwować termin.</p>
         )}
         {futureSlots.length === 0 && <p className="muted">Brak przyszłych slotów w tym wyniku wyszukiwania.</p>}
-        <ul className="slot-list">
-          {futureSlots.map((slot) => (
-            <li key={slot.id} className="slot-row">
-              <span>
-                {subjectById.get(slot.subjectId) ? `${subjectById.get(slot.subjectId)} · ` : ''}
-                {formatWhen(slot.startUtc)} — {formatWhen(slot.endUtc)}
-              </span>
-              <button
-                type="button"
-                className="btn primary"
-                disabled={!isStudent || bookingSlotId === slot.id}
-                onClick={() => handleBook(slot.id)}
-              >
-                {bookingSlotId === slot.id ? 'Rezerwacja...' : 'Rezerwuj'}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="booking-calendar-controls">
+          <label htmlFor="slotSubjectFilter">
+            Przedmiot
+            <select
+              id="slotSubjectFilter"
+              value={slotSubjectFilter}
+              onChange={(event) => setSlotSubjectFilter(event.target.value)}
+            >
+              <option value="">Wszystkie</option>
+              {[...new Set((tutor.offerings ?? []).map((offering) => offering.subjectId))].map((subjectId) => (
+                <option key={subjectId} value={subjectId}>
+                  {subjectById.get(subjectId) ?? `Przedmiot #${subjectId}`}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="booking-calendar-week-nav">
+            <button type="button" className="btn secondary" onClick={() => setWeekStart((date) => addDays(date, -7))}>
+              Poprzedni tydzień
+            </button>
+            <strong>
+              {weekStart.toLocaleDateString('pl-PL', { dateStyle: 'medium' })} -{' '}
+              {addDays(weekStart, 6).toLocaleDateString('pl-PL', { dateStyle: 'medium' })}
+            </strong>
+            <button type="button" className="btn secondary" onClick={() => setWeekStart((date) => addDays(date, 7))}>
+              Następny tydzień
+            </button>
+          </div>
+        </div>
+        <div className="booking-calendar-week">
+          {weekDays.map((day) => {
+            const key = toDateKey(day)
+            const daySlots = (slotsByDay.get(key) ?? []).sort(
+              (a, b) => new Date(a.startUtc).getTime() - new Date(b.startUtc).getTime(),
+            )
+            return (
+              <section key={key} className="booking-calendar-day">
+                <h3>
+                  {day.toLocaleDateString('pl-PL', { weekday: 'short' })}
+                  <span>{day.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })}</span>
+                </h3>
+                {daySlots.length === 0 ? (
+                  <p className="muted">Brak slotów</p>
+                ) : (
+                  <div className="booking-slot-buttons">
+                    {daySlots.map((slot) => (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        className="booking-slot-button"
+                        disabled={!isStudent || bookingSlotId === slot.id}
+                        onClick={() => handleBook(slot.id)}
+                      >
+                        <strong>
+                          {new Date(slot.startUtc).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                          {' - '}
+                          {new Date(slot.endUtc).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                        </strong>
+                        <span>{subjectById.get(slot.subjectId) ?? `#${slot.subjectId}`}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )
+          })}
+        </div>
       </section>
 
       {reviews.length > 0 && (

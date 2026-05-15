@@ -1,3 +1,3 @@
 ﻿namespace Learnly.Application.Tutors.Dtos;
 
-public sealed record LookupItemDto(int Id, string Name);
+public sealed record LookupItemDto(int Id, string Name, bool IsLanguage = false);

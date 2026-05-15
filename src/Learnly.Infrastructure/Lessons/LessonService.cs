@@ -74,6 +74,16 @@ public sealed class LessonService : ILessonService
         };
 
         _db.Lessons.Add(lesson);
+        _db.UserNotifications.Add(new UserNotification
+        {
+            Id = Guid.NewGuid(),
+            UserId = tutorProfile.UserId,
+            Type = "lesson_booked",
+            LessonId = lesson.Id,
+            Message = $"Zabookowano lekcje na {lesson.StartUtc.LocalDateTime:g}.",
+            LinkUrl = "/lessons",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
         await _db.SaveChangesAsync(cancellationToken);
         await tx.CommitAsync(cancellationToken);
 
@@ -166,7 +176,23 @@ public sealed class LessonService : ILessonService
             return (null, "You cannot change this lesson.");
         }
 
+        var previousStatus = lesson.Status;
         lesson.Status = status;
+
+        if (status == LessonStatus.Cancelled && previousStatus != LessonStatus.Cancelled)
+        {
+            _db.UserNotifications.Add(new UserNotification
+            {
+                Id = Guid.NewGuid(),
+                UserId = lesson.StudentUserId,
+                Type = "lesson_cancelled",
+                LessonId = lesson.Id,
+                Message = $"Lekcja z terminu {lesson.StartUtc.LocalDateTime:g} zostala odwolana.",
+                LinkUrl = "/lessons",
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+            });
+        }
+
         await _db.SaveChangesAsync(cancellationToken);
         var hasReview = await _db.Reviews.AnyAsync(x => x.LessonId == lesson.Id, cancellationToken);
         return (Map(lesson, hasReview), null);

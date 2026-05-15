@@ -59,17 +59,40 @@ public sealed class TutorAssignmentsService : ITutorAssignmentsService
         }
 
         var subjectIds = dto.Offerings.Select(x => x.SubjectId).Distinct().ToArray();
-        var validSubjects = await _db.Subjects.Where(s => subjectIds.Contains(s.Id)).Select(s => s.Id).ToArrayAsync(cancellationToken);
-        if (validSubjects.Length != subjectIds.Length)
+        var subjectsById = await _db.Subjects
+            .Where(s => subjectIds.Contains(s.Id))
+            .Select(s => new { s.Id, s.IsLanguage })
+            .ToDictionaryAsync(s => s.Id, cancellationToken);
+        if (subjectsById.Count != subjectIds.Length)
         {
-            return (null, "One or more subject IDs are invalid.");
+            return (null, "Co najmniej jeden wybrany przedmiot nie istnieje.");
         }
 
         var allLevelIds = dto.Offerings.SelectMany(x => x.TeachingLevelIds).Distinct().ToArray();
-        var validLevels = await _db.TeachingLevels.Where(l => allLevelIds.Contains(l.Id)).Select(l => l.Id).ToArrayAsync(cancellationToken);
-        if (validLevels.Length != allLevelIds.Length)
+        var levelsById = await _db.TeachingLevels
+            .Where(l => allLevelIds.Contains(l.Id))
+            .Select(l => new { l.Id, l.Name })
+            .ToDictionaryAsync(l => l.Id, cancellationToken);
+        if (levelsById.Count != allLevelIds.Length)
         {
-            return (null, "One or more teaching level IDs are invalid.");
+            return (null, "Co najmniej jeden wybrany poziom nauczania nie istnieje.");
+        }
+
+        foreach (var offering in dto.Offerings)
+        {
+            var subject = subjectsById[offering.SubjectId];
+            if (subject.IsLanguage)
+            {
+                continue;
+            }
+
+            var containsLanguageLevel = offering.TeachingLevelIds
+                .Select(levelId => levelsById[levelId].Name)
+                .Any(IsLanguageLevel);
+            if (containsLanguageLevel)
+            {
+                return (null, "Poziomy A1-C2 mozna wybrac tylko dla przedmiotow jezykowych.");
+            }
         }
 
         var existing = await _db.TutorTeachingOfferings
@@ -176,6 +199,11 @@ public sealed class TutorAssignmentsService : ITutorAssignmentsService
             o.HourlyRate,
             o.DurationMinutes,
             levelIds);
+    }
+
+    private static bool IsLanguageLevel(string name)
+    {
+        return name is "A1" or "A2" or "B1" or "B2" or "C1" or "C2";
     }
 
     private async Task<TutorProfile?> GetMyProfileAsync(CancellationToken cancellationToken)

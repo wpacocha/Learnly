@@ -112,7 +112,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireStudent", p => p.RequireRole(Roles.Student));
     options.AddPolicy("RequireTutor", p => p.RequireRole(Roles.Tutor));
 });
-
+ 
 var corsSection = builder.Configuration.GetSection("Cors:AllowedOrigins");
 var allowedOrigins = corsSection.Get<string[]>() ?? Array.Empty<string>();
 builder.Services.AddCors(options =>

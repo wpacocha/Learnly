@@ -19,6 +19,9 @@ public sealed class SubjectConfiguration : IEntityTypeConfiguration<Subject>
         builder.Property(e => e.Slug)
             .HasMaxLength(200);
 
+        builder.Property(e => e.IsLanguage)
+            .HasDefaultValue(false);
+
         builder.HasIndex(e => e.Slug)
             .IsUnique();
     }

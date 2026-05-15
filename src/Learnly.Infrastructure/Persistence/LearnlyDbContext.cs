@@ -23,6 +23,9 @@ public sealed class LearnlyDbContext : IdentityDbContext<ApplicationUser, Identi
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<LessonMessage> LessonMessages => Set<LessonMessage>();
     public DbSet<WhiteboardEvent> WhiteboardEvents => Set<WhiteboardEvent>();
+    public DbSet<TutorConversation> TutorConversations => Set<TutorConversation>();
+    public DbSet<TutorConversationMessage> TutorConversationMessages => Set<TutorConversationMessage>();
+    public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
 
     // SQL schema 1:1 model (Schema-backup.txt)
     public DbSet<DbRole> DbRoles => Set<DbRole>();

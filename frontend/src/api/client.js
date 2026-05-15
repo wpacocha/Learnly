@@ -20,6 +20,41 @@ export const resolveMediaUrl = (pathOrUrl) => {
   return `${base}${path}`
 }
 
+export const getApiErrorMessage = (error, fallback = 'Operacja nie powiodla sie.') => {
+  const data = error?.response?.data
+
+  if (typeof data === 'string' && data.trim()) {
+    return data
+  }
+
+  if (data?.message) {
+    return data.message
+  }
+
+  if (typeof data?.detail === 'string' && data.detail.trim()) {
+    return data.detail
+  }
+
+  if (data?.errors && typeof data.errors === 'object') {
+    const firstError = Object.values(data.errors)
+      .flat()
+      .find((value) => typeof value === 'string' && value.trim())
+    if (firstError) {
+      return firstError
+    }
+  }
+
+  if (data?.title) {
+    return data.title
+  }
+
+  if (error?.message) {
+    return error.message
+  }
+
+  return fallback
+}
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
 })

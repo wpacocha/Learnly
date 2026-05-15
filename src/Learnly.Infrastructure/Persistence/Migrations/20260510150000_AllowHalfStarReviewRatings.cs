@@ -1,9 +1,12 @@
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 #nullable disable
 
 namespace Learnly.Infrastructure.Persistence.Migrations;
 
+[DbContext(typeof(LearnlyDbContext))]
+[Migration("20260510150000_AllowHalfStarReviewRatings")]
 public partial class AllowHalfStarReviewRatings : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)

@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 
 const LoginPage = () => {
   const { login } = useAuth()
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
@@ -25,7 +27,7 @@ const LoginPage = () => {
       const redirectPath = location.state?.from?.pathname ?? '/dashboard'
       navigate(redirectPath, { replace: true })
     } catch {
-      setError('Nie udało się zalogować. Sprawdź dane i spróbuj ponownie.')
+      setError(t('Nie udalo sie zalogowac. Sprawdz dane i sprobuj ponownie.'))
     } finally {
       setIsSubmitting(false)
     }
@@ -34,20 +36,13 @@ const LoginPage = () => {
   return (
     <main className="page-shell auth-layout">
       <section className="card auth-card">
-        <h1>Logowanie</h1>
-        <p className="page-lead">Zaloguj się, aby korzystać z lekcji i profilu w Learnly.</p>
+        <h1>{t('Logowanie')}</h1>
+        <p className="page-lead">{t('Zaloguj sie, aby korzystac z lekcji i profilu w Learnly.')}</p>
         <form onSubmit={handleSubmit} className="form">
           <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
+          <input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
 
-          <label htmlFor="password">Hasło</label>
+          <label htmlFor="password">{t('Haslo')}</label>
           <input
             id="password"
             name="password"
@@ -64,13 +59,13 @@ const LoginPage = () => {
           )}
 
           <button className="btn primary" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Logowanie...' : 'Zaloguj się'}
+            {isSubmitting ? t('Logowanie...') : t('Zaloguj sie')}
           </button>
         </form>
         <p className="muted">
-          Nie masz konta?{' '}
+          {t('Nie masz konta?')}{' '}
           <Link className="text-link" to="/register">
-            Załóż konto
+            {t('Zaloz konto')}
           </Link>
         </p>
       </section>

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Learnly.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce22d7e6f270bd62c6ce26dba9e1877e5f0a5793")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fdaecd0f8bb662493baa3a4e4e9512da3cf65888")]
 [assembly: System.Reflection.AssemblyProductAttribute("Learnly.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Learnly.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

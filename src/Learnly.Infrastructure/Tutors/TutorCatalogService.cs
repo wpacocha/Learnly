@@ -18,7 +18,7 @@ public sealed class TutorCatalogService : ITutorCatalogService
     {
         return await _db.Subjects.AsNoTracking()
             .OrderBy(x => x.Name)
-            .Select(x => new LookupItemDto(x.Id, x.Name))
+            .Select(x => new LookupItemDto(x.Id, x.Name, x.IsLanguage))
             .ToListAsync(cancellationToken);
     }
 
@@ -26,7 +26,7 @@ public sealed class TutorCatalogService : ITutorCatalogService
     {
         return await _db.TeachingLevels.AsNoTracking()
             .OrderBy(x => x.Name)
-            .Select(x => new LookupItemDto(x.Id, x.Name))
+            .Select(x => new LookupItemDto(x.Id, x.Name, false))
             .ToListAsync(cancellationToken);
     }
 }

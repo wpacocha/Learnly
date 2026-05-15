@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchSubjects, fetchTeachingLevels } from '../api/catalogApi'
-import { resolveMediaUrl } from '../api/client'
+import { getApiErrorMessage, resolveMediaUrl } from '../api/client'
 import {
   createTutorProfile,
   getTutorProfile,
@@ -34,6 +34,10 @@ const DURATION_PRESETS = [
   { minutes: 90, label: '90 min' },
   { minutes: 120, label: '120 min' },
 ]
+
+const LANGUAGE_LEVEL_NAMES = new Set(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'])
+
+const isLanguageLevel = (level) => LANGUAGE_LEVEL_NAMES.has(String(level?.name ?? '').toUpperCase())
 
 const newOfferingRow = () => ({
   clientKey: crypto.randomUUID(),
@@ -78,6 +82,13 @@ const TutorProfilePage = () => {
   const [pendingPhotoFile, setPendingPhotoFile] = useState(null)
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState(null)
   const blobUrlRef = useRef(null)
+  const topRef = useRef(null)
+
+  const scrollToTop = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }, [])
 
   const revokeBlob = () => {
     if (blobUrlRef.current) {
@@ -103,14 +114,41 @@ const TutorProfilePage = () => {
 
   const updateOfferingField = useCallback((clientKey, field, value) => {
     setOfferings((prev) =>
-      prev.map((row) => (row.clientKey === clientKey ? { ...row, [field]: value } : row)),
+      prev.map((row) => {
+        if (row.clientKey !== clientKey) {
+          return row
+        }
+
+        if (field !== 'subjectId') {
+          return { ...row, [field]: value }
+        }
+
+        const subject = subjects.find((s) => s.id === value)
+        const subjectIsLanguage = Boolean(subject?.isLanguage)
+        const allowedLevelIds = new Set(
+          levels
+            .filter((level) => subjectIsLanguage || !isLanguageLevel(level))
+            .map((level) => level.id),
+        )
+
+        return {
+          ...row,
+          subjectId: value,
+          teachingLevelIds: row.teachingLevelIds.filter((levelId) => allowedLevelIds.has(levelId)),
+        }
+      }),
     )
-  }, [])
+  }, [levels, subjects])
 
   const addOffering = useCallback(() => {
+    if (!profileExists) {
+      setError('Najpierw utworz i zapisz profil tutora. Dopiero potem dodasz przedmioty.')
+      scrollToTop()
+      return
+    }
     setOfferingsUiExpanded(true)
     setOfferings((prev) => [...prev, newOfferingRow()])
-  }, [])
+  }, [profileExists, scrollToTop])
 
   const removeOffering = useCallback((clientKey) => {
     setOfferings((prev) => prev.filter((r) => r.clientKey !== clientKey))
@@ -301,12 +339,14 @@ const TutorProfilePage = () => {
 
     if (!form.firstName.trim() || !form.lastName.trim()) {
       setError('Podaj imię i nazwisko.')
+      scrollToTop()
       setIsSubmitting(false)
       return
     }
 
     if (!form.bio.trim()) {
       setError('Podaj krótki opis (bio).')
+      scrollToTop()
       setIsSubmitting(false)
       return
     }
@@ -316,8 +356,8 @@ const TutorProfilePage = () => {
       try {
         photoUrlToSave = await uploadTutorPhoto(pendingPhotoFile)
       } catch (err) {
-        const d = err?.response?.data
-        setError(d?.message || d?.detail || 'Nie udało się przesłać zdjęcia.')
+        setError(getApiErrorMessage(err, 'Nie udało się przesłać zdjęcia.'))
+        scrollToTop()
         setIsSubmitting(false)
         return
       }
@@ -327,6 +367,7 @@ const TutorProfilePage = () => {
 
     if (photoUrlToSave && photoUrlToSave.length > 2000) {
       setError('Zapisana ścieżka zdjęcia jest zbyt długa — zgłoś to administratorowi.')
+      scrollToTop()
       setIsSubmitting(false)
       return
     }
@@ -360,6 +401,7 @@ const TutorProfilePage = () => {
       if (input) {
         input.value = ''
       }
+      scrollToTop()
     } catch (err) {
       const d = err?.response?.data
       const backendMessage = d?.message
@@ -379,12 +421,9 @@ const TutorProfilePage = () => {
         setError('Profil już istnieje — odśwież stronę lub użyj „Zapisz profil”.')
         setProfileExists(true)
       } else {
-        setError(
-          typeof d === 'string'
-            ? d
-            : 'Nie udało się zapisać profilu. Upewnij się, że baza ma aktualny schemat (migracje EF).',
-        )
+        setError(getApiErrorMessage(err, 'Nie udało się zapisać profilu. Upewnij się, że baza ma aktualny schemat.'))
       }
+      scrollToTop()
     } finally {
       setIsSubmitting(false)
     }
@@ -392,39 +431,48 @@ const TutorProfilePage = () => {
 
   const handleSaveOfferings = async (event) => {
     event.preventDefault()
+    const showOfferingsError = (text) => {
+      setError(text)
+      scrollToTop()
+    }
     if (!profileExists) {
-      setError('Najpierw utwórz profil powyżej.')
+      showOfferingsError('Najpierw utwórz profil powyżej.')
       return
     }
     if (offerings.length === 0) {
-      setError('Dodaj co najmniej jedną pozycję oferty (przycisk +).')
+      showOfferingsError('Dodaj co najmniej jedną pozycję oferty (przycisk +).')
       return
     }
 
     const body = { offerings: [] }
     for (const row of offerings) {
       if (!row.subjectId) {
-        setError('W każdej pozycji wybierz przedmiot.')
+        showOfferingsError('W każdej pozycji wybierz przedmiot.')
         return
       }
       const rate = Number(row.hourlyRate)
       if (!Number.isFinite(rate) || rate < 0.01) {
-        setError('Podaj poprawną stawkę (min. 0,01 PLN) dla każdej pozycji.')
+        showOfferingsError('Podaj poprawną stawkę (min. 0,01 PLN) dla każdej pozycji.')
         return
       }
       const dm = Number(row.durationMinutes)
       if (!Number.isFinite(dm) || dm < 15 || dm > 480) {
-        setError('Długość lekcji musi być między 15 a 480 minut.')
+        showOfferingsError('Długość lekcji musi być między 15 a 480 minut.')
         return
       }
       if (row.teachingMode === 1 || row.teachingMode === 2) {
         if (!String(row.location || '').trim()) {
-          setError('Dla trybu stacjonarnego lub hybrydowego podaj lokalizację.')
+          showOfferingsError('Dla trybu stacjonarnego lub hybrydowego podaj lokalizację.')
           return
         }
       }
       if (!row.teachingLevelIds?.length) {
-        setError('Każda pozycja musi mieć co najmniej jeden poziom nauczania.')
+        showOfferingsError('Każda pozycja musi mieć co najmniej jeden poziom nauczania.')
+        return
+      }
+      const subjectIsLanguage = isSubjectLanguage(row.subjectId)
+      if (!subjectIsLanguage && row.teachingLevelIds.some((levelId) => isLanguageLevel(findLevelById(levelId)))) {
+        showOfferingsError('Poziomy A1-C2 można wybrać tylko dla przedmiotów językowych.')
         return
       }
 
@@ -464,9 +512,9 @@ const TutorProfilePage = () => {
       }
       setMessage('Oferta (przedmioty i poziomy) została zapisana.')
       setOfferingsUiExpanded(false)
+      scrollToTop()
     } catch (err) {
-      const backendMessage = err?.response?.data?.message
-      setError(backendMessage || 'Nie udało się zapisać oferty.')
+      showOfferingsError(getApiErrorMessage(err, 'Nie udało się zapisać oferty.'))
     } finally {
       setIsSavingOfferings(false)
     }
@@ -474,6 +522,9 @@ const TutorProfilePage = () => {
 
   const subjectById = useMemo(() => new Map(subjects.map((s) => [s.id, s.name])), [subjects])
   const levelById = useMemo(() => new Map(levels.map((l) => [l.id, l.name])), [levels])
+
+  const isSubjectLanguage = (subjectId) => subjects.some((s) => s.id === Number(subjectId) && Boolean(s.isLanguage))
+  const findLevelById = (levelId) => levels.find((l) => l.id === Number(levelId))
 
   const teachingModeLabel = (m) => TEACHING_MODES.find((x) => x.value === m)?.label ?? '—'
 
@@ -567,7 +618,7 @@ const TutorProfilePage = () => {
         // Slot jest już zapisany; w tym kroku tylko odświeżamy listę.
       }
     } catch (err) {
-      setAvailabilityError(err?.response?.data?.message || 'Nie udało się dodać terminu.')
+      setAvailabilityError(getApiErrorMessage(err, 'Nie udało się dodać terminu.'))
     } finally {
       setIsAvailabilitySaving(false)
     }
@@ -579,8 +630,8 @@ const TutorProfilePage = () => {
     try {
       await deleteAvailabilitySlot(slotId)
       await reloadAvailabilitySlots()
-    } catch {
-      setAvailabilityError('Usuwanie terminu nie powiodło się.')
+    } catch (err) {
+      setAvailabilityError(getApiErrorMessage(err, 'Usuwanie terminu nie powiodło się.'))
     } finally {
       setAvailabilityDeletingId(null)
     }
@@ -608,7 +659,7 @@ const TutorProfilePage = () => {
   const catalogReady = subjects.length > 0 && levels.length > 0
 
   return (
-    <main className="page-shell tutor-profile-page">
+    <main ref={topRef} className="page-shell tutor-profile-page">
       {(error || message || catalogError) && (
         <div className="alert-stack" aria-live="polite">
           {catalogError && (
@@ -744,7 +795,7 @@ const TutorProfilePage = () => {
         )}
       </section>
 
-      <section className={`card tutor-assignments-card ${!catalogReady ? 'card-disabled' : ''}`}>
+      <section className={`card tutor-assignments-card ${!catalogReady || !profileExists ? 'card-disabled' : ''}`}>
         <h2>Przedmioty, tryb i poziomy</h2>
         <p className="muted">
           {showOfferingsEditor
@@ -760,6 +811,15 @@ const TutorProfilePage = () => {
             <p>
               <strong>Brak pozycji w katalogu.</strong> Uruchom ponownie backend — przy starcie do pustej bazy dodawane są
               przedmioty i poziomy. Jeśli to nowa baza, wykonaj też migracje EF.
+            </p>
+          </div>
+        )}
+
+        {!profileExists && (
+          <div className="empty-catalog-hint" role="status">
+            <p>
+              <strong>Najpierw utworz profil tutora.</strong> Po zapisaniu podstawowych danych odblokujesz dodawanie
+              przedmiotow, poziomow, stawek i terminow.
             </p>
           </div>
         )}
@@ -792,7 +852,7 @@ const TutorProfilePage = () => {
                         type="button"
                         className="btn secondary"
                         onClick={() => expandOfferingsAndScroll(row.clientKey)}
-                        disabled={!catalogReady}
+                        disabled={!catalogReady || !profileExists}
                       >
                         Edytuj
                       </button>
@@ -800,7 +860,7 @@ const TutorProfilePage = () => {
                         type="button"
                         className="btn primary"
                         onClick={() => openAvailabilityForOffering(row)}
-                        disabled={!catalogReady || !row.serverId}
+                        disabled={!catalogReady || !profileExists || !row.serverId}
                       >
                         Ustaw godziny
                       </button>
@@ -818,11 +878,11 @@ const TutorProfilePage = () => {
                   setMessage('')
                   setError('')
                 }}
-                disabled={!catalogReady}
+                disabled={!catalogReady || !profileExists}
               >
                 Edytuj całą ofertę
               </button>
-              <button type="button" className="btn secondary" onClick={addOffering} disabled={!catalogReady}>
+              <button type="button" className="btn secondary" onClick={addOffering} disabled={!catalogReady || !profileExists}>
                 + Dodaj pozycję oferty
               </button>
             </div>
@@ -832,7 +892,7 @@ const TutorProfilePage = () => {
         {showOfferingsEditor && (
           <>
             <div className="tutor-offerings-actions">
-              <button type="button" className="btn secondary" onClick={addOffering} disabled={!catalogReady}>
+              <button type="button" className="btn secondary" onClick={addOffering} disabled={!catalogReady || !profileExists}>
                 + Dodaj pozycję oferty
               </button>
               {canCollapseOfferings && (
@@ -863,7 +923,7 @@ const TutorProfilePage = () => {
                       type="button"
                       className="btn ghost"
                       onClick={() => removeOffering(row.clientKey)}
-                      disabled={!catalogReady}
+                      disabled={!catalogReady || !profileExists}
                     >
                       Usuń
                     </button>
@@ -876,7 +936,7 @@ const TutorProfilePage = () => {
                   onChange={(e) =>
                     updateOfferingField(row.clientKey, 'subjectId', e.target.value ? Number(e.target.value) : '')
                   }
-                  disabled={!catalogReady}
+                  disabled={!catalogReady || !profileExists}
                 >
                   <option value="">— wybierz —</option>
                   {subjects.map((s) => (
@@ -890,7 +950,7 @@ const TutorProfilePage = () => {
                 <select
                   value={row.teachingMode}
                   onChange={(e) => updateOfferingField(row.clientKey, 'teachingMode', Number(e.target.value))}
-                  disabled={!catalogReady}
+                  disabled={!catalogReady || !profileExists}
                 >
                   {TEACHING_MODES.map((m) => (
                     <option key={m.value} value={m.value}>
@@ -908,7 +968,7 @@ const TutorProfilePage = () => {
                       onChange={(e) => updateOfferingField(row.clientKey, 'location', e.target.value)}
                       maxLength={300}
                       placeholder="np. Warszawa, Śródmieście"
-                      disabled={!catalogReady}
+                      disabled={!catalogReady || !profileExists}
                     />
                   </>
                 )}
@@ -920,14 +980,14 @@ const TutorProfilePage = () => {
                   step="0.01"
                   value={row.hourlyRate}
                   onChange={(e) => updateOfferingField(row.clientKey, 'hourlyRate', e.target.value)}
-                  disabled={!catalogReady}
+                  disabled={!catalogReady || !profileExists}
                 />
 
                 <label>Długość lekcji</label>
                 <select
                   value={row.durationMinutes}
                   onChange={(e) => updateOfferingField(row.clientKey, 'durationMinutes', Number(e.target.value))}
-                  disabled={!catalogReady}
+                  disabled={!catalogReady || !profileExists}
                 >
                   {DURATION_PRESETS.map((d) => (
                     <option key={d.minutes} value={d.minutes}>
@@ -936,10 +996,12 @@ const TutorProfilePage = () => {
                   ))}
                 </select>
 
-                <fieldset className="checkbox-fieldset levels-chip-fieldset" disabled={!catalogReady}>
+                <fieldset className="checkbox-fieldset levels-chip-fieldset" disabled={!catalogReady || !profileExists}>
                   <legend>Poziomy nauczania</legend>
                   <div className="chip-select-grid" role="group">
-                    {levels.map((l) => {
+                    {levels
+                      .filter((l) => isSubjectLanguage(row.subjectId) || !isLanguageLevel(l))
+                      .map((l) => {
                       const on = row.teachingLevelIds.includes(l.id)
                       return (
                         <button
@@ -954,6 +1016,11 @@ const TutorProfilePage = () => {
                       )
                     })}
                   </div>
+                  {row.subjectId && !isSubjectLanguage(row.subjectId) && (
+                    <p className="levels-chip-hint muted">
+                      Poziomy A1-C2 sa dostepne tylko dla przedmiotow jezykowych.
+                    </p>
+                  )}
                 </fieldset>
                   </div>
                 </div>

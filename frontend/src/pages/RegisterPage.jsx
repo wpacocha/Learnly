@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 
 const RegisterPage = () => {
   const { register } = useAuth()
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const [form, setForm] = useState({
     email: '',
@@ -31,7 +33,7 @@ const RegisterPage = () => {
       if (Array.isArray(backendErrors) && backendErrors.length > 0) {
         setError(backendErrors.join(' '))
       } else {
-        setError('Nie udało się utworzyć konta. Sprawdź dane i spróbuj ponownie.')
+        setError(t('Nie udalo sie utworzyc konta. Sprawdz dane i sprobuj ponownie.'))
       }
     } finally {
       setIsSubmitting(false)
@@ -41,20 +43,13 @@ const RegisterPage = () => {
   return (
     <main className="page-shell auth-layout">
       <section className="card auth-card">
-        <h1>Rejestracja</h1>
-        <p className="page-lead">Utwórz konto ucznia lub tutora i zacznij korzystać z platformy.</p>
+        <h1>{t('Rejestracja')}</h1>
+        <p className="page-lead">{t('Utworz konto ucznia lub tutora i zacznij korzystac z platformy.')}</p>
         <form onSubmit={handleSubmit} className="form">
           <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
+          <input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
 
-          <label htmlFor="password">Hasło</label>
+          <label htmlFor="password">{t('Haslo')}</label>
           <input
             id="password"
             name="password"
@@ -65,10 +60,10 @@ const RegisterPage = () => {
             minLength={8}
           />
 
-          <label htmlFor="role">Rola</label>
+          <label htmlFor="role">{t('Rola')}</label>
           <select id="role" name="role" value={form.role} onChange={handleChange}>
-            <option value="Student">Student</option>
-            <option value="Tutor">Tutor</option>
+            <option value="Student">{t('Student')}</option>
+            <option value="Tutor">{t('Tutor')}</option>
           </select>
 
           {error && (
@@ -78,13 +73,13 @@ const RegisterPage = () => {
           )}
 
           <button className="btn primary" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Tworzenie konta...' : 'Załóż konto'}
+            {isSubmitting ? t('Tworzenie konta...') : t('Zaloz konto')}
           </button>
         </form>
         <p className="muted">
-          Masz już konto?{' '}
+          {t('Masz juz konto?')}{' '}
           <Link className="text-link" to="/login">
-            Zaloguj się
+            {t('Zaloguj sie')}
           </Link>
         </p>
       </section>
